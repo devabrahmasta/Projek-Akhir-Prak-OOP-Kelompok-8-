@@ -25,12 +25,12 @@ public class DashboardView extends JPanel {
     private JLabel lblLastUpdated;
     
     // Style constants
-    private final Color COLOR_BG = new Color(18, 18, 20);
-    private final Color COLOR_CARD = new Color(34, 34, 40);
-    private final Color COLOR_PRIMARY = new Color(124, 77, 255); // Electric Violet
-    private final Color COLOR_TEXT = Color.WHITE;
-    private final Color COLOR_TEXT_MUTED = new Color(160, 160, 170);
-    private final Color COLOR_BORDER = new Color(45, 45, 52);
+    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
+    private final Color COLOR_CARD = Color.WHITE;
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); // Dark Teal Text
+    private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
+    private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
     
     public DashboardView() {
         setLayout(new BorderLayout(20, 20));
@@ -79,16 +79,16 @@ public class DashboardView extends JPanel {
         JPanel cardsGrid = new JPanel(new GridLayout(1, 4, 15, 0));
         cardsGrid.setBackground(COLOR_BG);
         
-        JPanel cardPasien = createStatCard("TOTAL PASIEN", "0", new Color(124, 77, 255)); // Violet
+        JPanel cardPasien = createStatCard("TOTAL PASIEN", "0", new Color(0x1F, 0x6F, 0x5F)); // Dark Teal
         lblTotalPasien = (JLabel) cardPasien.getClientProperty("valueLabel");
         
-        JPanel cardAntrian = createStatCard("ANTRIAN MENUNGGU", "0", new Color(41, 121, 255)); // Blue
+        JPanel cardAntrian = createStatCard("ANTRIAN MENUNGGU", "0", new Color(0x2F, 0xA0, 0x84)); // Medium Teal
         lblAntrianMenunggu = (JLabel) cardAntrian.getClientProperty("valueLabel");
         
-        JPanel cardKunjungan = createStatCard("KUNJUNGAN HARI INI", "0", new Color(76, 175, 80)); // Green
+        JPanel cardKunjungan = createStatCard("KUNJUNGAN HARI INI", "0", new Color(0x6F, 0xCF, 0x97)); // Mint Green
         lblKunjunganHariIni = (JLabel) cardKunjungan.getClientProperty("valueLabel");
         
-        JPanel cardDokter = createStatCard("DOKTER AKTIF", "0", new Color(255, 152, 0)); // Orange
+        JPanel cardDokter = createStatCard("DOKTER AKTIF", "0", new Color(0x2E, 0x7D, 0x32)); // Forest Green
         lblDokterAktif = (JLabel) cardDokter.getClientProperty("valueLabel");
         
         cardsGrid.add(cardPasien);
