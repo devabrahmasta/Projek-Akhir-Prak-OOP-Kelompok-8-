@@ -32,14 +32,14 @@ public class PasienView extends JPanel {
     private JLabel lblStatus;
     
     // Style constants
-    private final Color COLOR_BG = new Color(18, 18, 20);
-    private final Color COLOR_CARD = new Color(34, 34, 40);
-    private final Color COLOR_PRIMARY = new Color(124, 77, 255); // Electric Violet
-    private final Color COLOR_PRIMARY_HOVER = new Color(101, 31, 255);
-    private final Color COLOR_TEXT = Color.WHITE;
-    private final Color COLOR_TEXT_MUTED = new Color(160, 160, 170);
-    private final Color COLOR_BORDER = new Color(45, 45, 52);
-    private final Color COLOR_INPUT_BG = new Color(26, 26, 30);
+    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
+    private final Color COLOR_CARD = Color.WHITE;
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
+    private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F); // Dark Teal
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); // Dark Teal Text
+    private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
+    private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
+    private final Color COLOR_INPUT_BG = new Color(0xF5, 0xF7, 0xF6);
     
     public PasienView() {
         setLayout(new BorderLayout(15, 15));
@@ -233,7 +233,12 @@ public class PasienView extends JPanel {
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         
-        splitPane.setLeftComponent(formPanel);
+        JScrollPane formScrollPane = new JScrollPane(formPanel);
+        formScrollPane.setBorder(null);
+        formScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        formScrollPane.getViewport().setBackground(COLOR_CARD);
+        
+        splitPane.setLeftComponent(formScrollPane);
         splitPane.setRightComponent(tablePanel);
         add(splitPane, BorderLayout.CENTER);
         

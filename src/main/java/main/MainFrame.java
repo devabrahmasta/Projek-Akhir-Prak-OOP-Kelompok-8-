@@ -39,11 +39,11 @@ public class MainFrame extends JFrame {
     private AntrianController antrianController;
     
     // Theme colors
-    private final Color COLOR_SIDEBAR = new Color(26, 26, 30);
-    private final Color COLOR_BG = new Color(18, 18, 20);
-    private final Color COLOR_PRIMARY = new Color(124, 77, 255);
+    private final Color COLOR_SIDEBAR = new Color(0x1F, 0x6F, 0x5F); // Dark Teal
+    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE); // Light Grey
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
     private final Color COLOR_TEXT = Color.WHITE;
-    private final Color COLOR_TEXT_MUTED = new Color(160, 160, 170);
+    private final Color COLOR_TEXT_MUTED = new Color(0x9E, 0xDF, 0xD4); // Mint/Light Grey-Teal for sidebar labels
     
     public MainFrame() {
         setTitle("Sistem Manajemen Klinik - Medika Center");
@@ -146,7 +146,7 @@ public class MainFrame extends JFrame {
             @Override
             public void mouseEntered(MouseEvent e) {
                 if (btn.getForeground() != COLOR_TEXT) { // If not active
-                    btn.setBackground(new Color(40, 40, 46));
+                    btn.setBackground(new Color(0x14, 0x48, 0x3E)); // Darker Teal Hover
                     btn.setForeground(COLOR_TEXT);
                 }
             }

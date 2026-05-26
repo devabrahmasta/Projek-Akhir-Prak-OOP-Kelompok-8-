@@ -10,10 +10,10 @@ import java.sql.DatabaseMetaData;
 public class DBConnection {
     private static DBConnection instance;
     private Connection connection;
-    
-    private static final String URL = "jdbc:mysql://localhost:3306/klinik_db";
+    private static final String PORT = "8111";
+    private static final String URL = "jdbc:mysql://localhost:"+PORT+"/klinik_db";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "";
 
     private DBConnection() {
         try {
