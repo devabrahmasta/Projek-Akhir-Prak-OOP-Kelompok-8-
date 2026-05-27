@@ -390,11 +390,10 @@ public class PasienView extends JPanel {
     public void setStatusText(String text) {
         lblStatus.setText("Status: " + text);
     }
-    
     public void setButtonsState(boolean isEditing) {
         btnTambah.setEnabled(!isEditing);
         btnSimpan.setEnabled(isEditing);
-        btnHapus.setEnabled(!isEditing && table.getSelectedRow() != -1);
+        btnHapus.setEnabled(table.getSelectedRow() != -1);
         btnBatal.setEnabled(isEditing);
     }
 }

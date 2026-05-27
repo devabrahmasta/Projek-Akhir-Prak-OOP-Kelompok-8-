@@ -3,8 +3,6 @@ package controller;
 import view.DokterView;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.util.List;
-import java.util.ArrayList;
 
 public class DokterController {
     private DokterView view;
