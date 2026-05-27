@@ -112,10 +112,11 @@ public class PasienView extends JPanel {
         gbc.gridy++;
         
         
-        formPanel.add(createFormLabel("No. Rekam Medis (RM):"), gbc);
+        formPanel.add(createFormLabel("No. Rekam Medis (RM) [Otomatis]:"), gbc);
         gbc.gridy++;
         txtNoRM = new JTextField();
         styleTextField(txtNoRM);
+        txtNoRM.setEditable(false);
         formPanel.add(txtNoRM, gbc);
         
         gbc.gridy++;
