@@ -15,7 +15,7 @@ public class KunjunganView extends JPanel {
     
     private JComboBox<ComboItem> cbPasien;
     private JComboBox<ComboItem> cbDokter;
-    private JTextField txtTanggal; // Format: YYYY-MM-DD HH:mm:ss
+    private JTextField txtTanggal; 
     private JTextArea txtKeluhan;
     private JTextArea txtDiagnosa;
     
@@ -29,12 +29,12 @@ public class KunjunganView extends JPanel {
     
     private JLabel lblStatus;
     
-    // Style constants
+    
     private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
-    private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F); // Dark Teal
-    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); // Dark Teal Text
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); 
+    private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F); 
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); 
     private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
     private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
     private final Color COLOR_INPUT_BG = new Color(0xF5, 0xF7, 0xF6);
@@ -57,7 +57,7 @@ public class KunjunganView extends JPanel {
         titleLabel.setForeground(COLOR_TEXT);
         headerPanel.add(titleLabel, BorderLayout.WEST);
         
-        // Search bar
+        
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         searchPanel.setBackground(COLOR_BG);
         
@@ -84,7 +84,7 @@ public class KunjunganView extends JPanel {
         splitPane.setBorder(null);
         splitPane.setBackground(COLOR_BG);
         
-        // Left Panel - Form
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(COLOR_CARD);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -98,7 +98,7 @@ public class KunjunganView extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         
-        // Title Form
+        
         JLabel formTitle = new JLabel("Form Catatan Kunjungan");
         formTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         formTitle.setForeground(COLOR_TEXT);
@@ -108,7 +108,7 @@ public class KunjunganView extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
         
-        // Pasien
+        
         formPanel.add(createFormLabel("Pasien:"), gbc);
         gbc.gridy++;
         cbPasien = new JComboBox<>();
@@ -116,7 +116,7 @@ public class KunjunganView extends JPanel {
         formPanel.add(cbPasien, gbc);
         
         gbc.gridy++;
-        // Dokter
+        
         formPanel.add(createFormLabel("Dokter Pemeriksa:"), gbc);
         gbc.gridy++;
         cbDokter = new JComboBox<>();
@@ -124,7 +124,7 @@ public class KunjunganView extends JPanel {
         formPanel.add(cbDokter, gbc);
         
         gbc.gridy++;
-        // Tanggal Kunjungan
+        
         formPanel.add(createFormLabel("Waktu (YYYY-MM-DD HH:mm:ss):"), gbc);
         gbc.gridy++;
         txtTanggal = new JTextField();
@@ -132,7 +132,7 @@ public class KunjunganView extends JPanel {
         formPanel.add(txtTanggal, gbc);
         
         gbc.gridy++;
-        // Keluhan
+        
         formPanel.add(createFormLabel("Keluhan Pasien:"), gbc);
         gbc.gridy++;
         txtKeluhan = new JTextArea(3, 15);
@@ -140,14 +140,14 @@ public class KunjunganView extends JPanel {
         formPanel.add(new JScrollPane(txtKeluhan), gbc);
         
         gbc.gridy++;
-        // Diagnosa
+        
         formPanel.add(createFormLabel("Diagnosa Medis:"), gbc);
         gbc.gridy++;
         txtDiagnosa = new JTextArea(3, 15);
         styleTextArea(txtDiagnosa);
         formPanel.add(new JScrollPane(txtDiagnosa), gbc);
         
-        // Buttons
+        
         gbc.gridy++;
         gbc.insets = new Insets(15, 6, 6, 6);
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 8, 8));
@@ -174,7 +174,7 @@ public class KunjunganView extends JPanel {
         lblStatus.setForeground(COLOR_TEXT_MUTED);
         formPanel.add(lblStatus, gbc);
         
-        // Right Panel - Table
+        
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(COLOR_CARD);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(
@@ -188,7 +188,7 @@ public class KunjunganView extends JPanel {
         tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         tablePanel.add(tableTitle, BorderLayout.NORTH);
         
-        // Setup Table
+        
         String[] columns = {"ID", "Pasien", "Dokter Pemeriksa", "Waktu Kunjungan", "Keluhan", "Diagnosa"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -214,7 +214,7 @@ public class KunjunganView extends JPanel {
         splitPane.setRightComponent(tablePanel);
         add(splitPane, BorderLayout.CENTER);
         
-        // Initial form state
+        
         setFormEnabled(false);
         btnSimpan.setEnabled(false);
     }
@@ -303,7 +303,7 @@ public class KunjunganView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // UI Helpers & controllers bridging
+    
     
     public void setFormEnabled(boolean enabled) {
         cbPasien.setEnabled(enabled);
@@ -344,7 +344,7 @@ public class KunjunganView extends JPanel {
         }
     }
     
-    // Getters for form inputs
+    
     public ComboItem getSelectedPasien() { return (ComboItem) cbPasien.getSelectedItem(); }
     public ComboItem getSelectedDokter() { return (ComboItem) cbDokter.getSelectedItem(); }
     public String getTanggalInput() { return txtTanggal.getText().trim(); }
@@ -353,10 +353,10 @@ public class KunjunganView extends JPanel {
     
     public String getCariInput() { return txtCari.getText().trim(); }
     
-    // Setters
+    
     public void setTanggalInput(String val) { txtTanggal.setText(val); }
     
-    // Listeners
+    
     public void addTambahListener(ActionListener l) { btnTambah.addActionListener(l); }
     public void addSimpanListener(ActionListener l) { btnSimpan.addActionListener(l); }
     public void addHapusListener(ActionListener l) { btnHapus.addActionListener(l); }

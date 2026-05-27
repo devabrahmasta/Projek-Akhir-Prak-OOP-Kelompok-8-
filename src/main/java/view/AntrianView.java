@@ -15,10 +15,10 @@ public class AntrianView extends JPanel {
     
     private JComboBox<ComboItem> cbPasien;
     private JComboBox<ComboItem> cbDokter;
-    private JTextField txtTanggal; // Format: YYYY-MM-DD
+    private JTextField txtTanggal; 
     private JComboBox<String> cbStatus;
     
-    // Filters
+    
     private JComboBox<ComboItem> cbFilterDokter;
     private JTextField txtFilterTanggal;
     private JButton btnFilter;
@@ -31,11 +31,11 @@ public class AntrianView extends JPanel {
     
     private JLabel lblStatus;
     
-    // Style constants
+    
     private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
-    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); // Dark Teal Text
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); 
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); 
     private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
     private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
     private final Color COLOR_INPUT_BG = new Color(0xF5, 0xF7, 0xF6);
@@ -63,7 +63,7 @@ public class AntrianView extends JPanel {
         
         headerPanel.add(titlePanel, BorderLayout.WEST);
         
-        // Filters Panel
+        
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterPanel.setBackground(COLOR_BG);
         
@@ -98,7 +98,7 @@ public class AntrianView extends JPanel {
         splitPane.setBorder(null);
         splitPane.setBackground(COLOR_BG);
         
-        // Left Panel - Form
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(COLOR_CARD);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -121,7 +121,7 @@ public class AntrianView extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
         
-        // Pasien
+        
         formPanel.add(createFormLabel("Pasien:"), gbc);
         gbc.gridy++;
         cbPasien = new JComboBox<>();
@@ -129,7 +129,7 @@ public class AntrianView extends JPanel {
         formPanel.add(cbPasien, gbc);
         
         gbc.gridy++;
-        // Dokter
+        
         formPanel.add(createFormLabel("Pilih Dokter / Poli:"), gbc);
         gbc.gridy++;
         cbDokter = new JComboBox<>();
@@ -137,7 +137,7 @@ public class AntrianView extends JPanel {
         formPanel.add(cbDokter, gbc);
         
         gbc.gridy++;
-        // Tanggal
+        
         formPanel.add(createFormLabel("Tanggal Antrian (YYYY-MM-DD):"), gbc);
         gbc.gridy++;
         txtTanggal = new JTextField();
@@ -145,7 +145,7 @@ public class AntrianView extends JPanel {
         formPanel.add(txtTanggal, gbc);
         
         gbc.gridy++;
-        // Status
+        
         formPanel.add(createFormLabel("Status:"), gbc);
         gbc.gridy++;
         cbStatus = new JComboBox<>(new String[]{"Menunggu", "Dipanggil", "Selesai", "Batal"});
@@ -155,7 +155,7 @@ public class AntrianView extends JPanel {
         cbStatus.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         formPanel.add(cbStatus, gbc);
         
-        // Action Buttons
+        
         gbc.gridy++;
         gbc.insets = new Insets(15, 8, 8, 8);
         
@@ -169,13 +169,13 @@ public class AntrianView extends JPanel {
         gridStatusPanel.setBackground(COLOR_CARD);
         
         btnPanggil = new JButton("Panggil");
-        styleButton(btnPanggil, new Color(41, 121, 255)); // Bright Blue
+        styleButton(btnPanggil, new Color(41, 121, 255)); 
         btnSelesai = new JButton("Selesai");
-        styleButton(btnSelesai, new Color(46, 125, 50)); // Green
+        styleButton(btnSelesai, new Color(46, 125, 50)); 
         btnBatal = new JButton("Batal");
-        styleButton(btnBatal, new Color(117, 117, 117)); // Grey
+        styleButton(btnBatal, new Color(117, 117, 117)); 
         btnHapus = new JButton("Hapus");
-        styleButton(btnHapus, new Color(198, 40, 40)); // Red
+        styleButton(btnHapus, new Color(198, 40, 40)); 
         
         gridStatusPanel.add(btnPanggil);
         gridStatusPanel.add(btnSelesai);
@@ -189,7 +189,7 @@ public class AntrianView extends JPanel {
         lblStatus.setForeground(COLOR_TEXT_MUTED);
         formPanel.add(lblStatus, gbc);
         
-        // Right Panel - Table
+        
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(COLOR_CARD);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(
@@ -203,7 +203,7 @@ public class AntrianView extends JPanel {
         tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         tablePanel.add(tableTitle, BorderLayout.NORTH);
         
-        // Setup JTable
+        
         String[] columns = {"ID", "No. Antrian", "Nama Pasien", "Dokter Pemeriksa", "Tanggal", "Status"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -229,7 +229,7 @@ public class AntrianView extends JPanel {
         splitPane.setRightComponent(tablePanel);
         add(splitPane, BorderLayout.CENTER);
         
-        // Initial states
+        
         setSelectionButtonsEnabled(false);
     }
     
@@ -304,7 +304,7 @@ public class AntrianView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // UI Helpers & controllers bridging
+    
     
     public void setPasienList(ComboItem[] items) {
         cbPasien.removeAllItems();
@@ -317,7 +317,7 @@ public class AntrianView extends JPanel {
         cbDokter.removeAllItems();
         cbFilterDokter.removeAllItems();
         
-        // Add "Semua Dokter" to filter
+        
         cbFilterDokter.addItem(new ComboItem(0, "-- Semua Dokter --"));
         
         for (ComboItem item : items) {
@@ -340,21 +340,21 @@ public class AntrianView extends JPanel {
         cbStatus.setSelectedItem(status);
     }
     
-    // Input Getters
+    
     public ComboItem getSelectedPasien() { return (ComboItem) cbPasien.getSelectedItem(); }
     public ComboItem getSelectedDokter() { return (ComboItem) cbDokter.getSelectedItem(); }
     public String getTanggalInput() { return txtTanggal.getText().trim(); }
     public String getStatusInput() { return (String) cbStatus.getSelectedItem(); }
     
-    // Filter Getters
+    
     public ComboItem getFilterDokter() { return (ComboItem) cbFilterDokter.getSelectedItem(); }
     public String getFilterTanggal() { return txtFilterTanggal.getText().trim(); }
     
-    // Setters
+    
     public void setTanggalInput(String val) { txtTanggal.setText(val); }
     public void setFilterTanggal(String val) { txtFilterTanggal.setText(val); }
     
-    // Action Listeners
+    
     public void addTambahListener(ActionListener l) { btnTambah.addActionListener(l); }
     public void addPanggilListener(ActionListener l) { btnPanggil.addActionListener(l); }
     public void addSelesaiListener(ActionListener l) { btnSelesai.addActionListener(l); }

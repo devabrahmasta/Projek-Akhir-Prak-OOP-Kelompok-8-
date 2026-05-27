@@ -49,41 +49,41 @@ public class DashboardController {
                 }
 
                 try (Statement stmt = connection.createStatement()) {
-                    // 1. Total Pasien
+                    
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM pasien")) {
                         if (rs.next()) totalPasien = rs.getInt(1);
                     }
 
-                    // 2. Antrian Menunggu
+                    
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM antrian WHERE status = 'Menunggu' AND tanggal = CURRENT_DATE()")) {
                         if (rs.next()) {
                             antrianMenunggu = rs.getInt(1);
                         } else {
-                            // Fallback if no dates match today
+                            
                             try (ResultSet rs2 = stmt.executeQuery("SELECT COUNT(*) FROM antrian WHERE status = 'Menunggu'")) {
                                 if (rs2.next()) antrianMenunggu = rs2.getInt(1);
                             }
                         }
                     }
 
-                    // 3. Kunjungan Hari Ini
+                    
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM kunjungan WHERE DATE(tanggal_kunjungan) = CURRENT_DATE()")) {
                         if (rs.next()) {
                             kunjunganHariIni = rs.getInt(1);
                         } else {
-                            // Fallback count of total visits if today has 0
+                            
                             try (ResultSet rs2 = stmt.executeQuery("SELECT COUNT(*) FROM kunjungan")) {
                                 if (rs2.next()) kunjunganHariIni = rs2.getInt(1);
                             }
                         }
                     }
 
-                    // 4. Dokter Aktif
+                    
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM dokter")) {
                         if (rs.next()) dokterAktif = rs.getInt(1);
                     }
 
-                    // 5. Antrian List (Today's queues or latest 10 queues)
+                    
                     String sqlAntrian = "SELECT a.nomor_antrian, p.nama AS nama_pasien, d.nama AS nama_dokter, a.status " +
                                         "FROM antrian a " +
                                         "JOIN pasien p ON a.id_pasien = p.id " +
@@ -101,7 +101,7 @@ public class DashboardController {
                         }
                     }
                     
-                    // Fallback to latest 10 queues if today is empty
+                    
                     if (antrianRows.isEmpty()) {
                         String sqlLatestAntrian = "SELECT a.nomor_antrian, p.nama AS nama_pasien, d.nama AS nama_dokter, a.status " +
                                                   "FROM antrian a " +
@@ -120,14 +120,14 @@ public class DashboardController {
                         }
                     }
 
-                    // 6. Kunjungan List (Latest 10 visits)
+                    
                     String sqlKunjungan = "SELECT k.tanggal_kunjungan, p.nama AS nama_pasien, k.keluhan, k.diagnosa " +
                                           "FROM kunjungan k " +
                                           "JOIN pasien p ON k.id_pasien = p.id " +
                                           "ORDER BY k.tanggal_kunjungan DESC LIMIT 10";
                     try (ResultSet rs = stmt.executeQuery(sqlKunjungan)) {
                         while (rs.next()) {
-                            antrianRows.size(); // dummy trigger
+                            antrianRows.size(); 
                             kunjunganRows.add(new Object[]{
                                 rs.getTimestamp("tanggal_kunjungan").toString(),
                                 rs.getString("nama_pasien"),
@@ -149,7 +149,7 @@ public class DashboardController {
                     view.setKunjunganHariIni(String.valueOf(metrics.kunjunganHariIni));
                     view.setDokterAktif(String.valueOf(metrics.dokterAktif));
 
-                    // Populate tables
+                    
                     DefaultTableModel antrianModel = view.getTableModelAntrian();
                     antrianModel.setRowCount(0);
                     for (Object[] row : metrics.antrianRows) {

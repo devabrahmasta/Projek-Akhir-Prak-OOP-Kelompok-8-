@@ -59,9 +59,9 @@ public class AntrianController {
         refreshThread = new Thread(() -> {
             while (refreshThreadRunning) {
                 try {
-                    Thread.sleep(10000); // Sleep for 10 seconds
+                    Thread.sleep(10000); 
                     if (refreshThreadRunning) {
-                        // Refresh data silently in background using SwingWorker
+                        
                         loadData(false);
                     }
                 } catch (InterruptedException e) {
@@ -89,7 +89,7 @@ public class AntrianController {
                 
                 if (connection == null) return new DropdownData(pasienList, dokterList);
 
-                // Load Pasien
+                
                 String sqlPasien = "SELECT id, nama, no_rm FROM pasien ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlPasien)) {
@@ -101,7 +101,7 @@ public class AntrianController {
                     }
                 }
 
-                // Load Dokter
+                
                 String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlDokter)) {
@@ -135,7 +135,7 @@ public class AntrianController {
             view.setStatusText("Memuat data antrian...");
         }
 
-        // Get filter inputs
+        
         ComboItem filterDokter = view.getFilterDokter();
         String filterTglStr = view.getFilterTanggal();
 
@@ -238,7 +238,7 @@ public class AntrianController {
             protected Integer doInBackground() throws Exception {
                 if (connection == null) return -1;
 
-                // 1. Auto calculate next queue number for this doctor and date
+                
                 int nextQueueNum = 1;
                 String sqlMax = "SELECT MAX(nomor_antrian) FROM antrian WHERE id_dokter = ? AND tanggal = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlMax)) {
@@ -251,7 +251,7 @@ public class AntrianController {
                     }
                 }
 
-                // 2. Insert new queue item
+                
                 String sqlInsert = "INSERT INTO antrian (id_pasien, id_dokter, tanggal, nomor_antrian, status) VALUES (?, ?, ?, ?, ?)";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlInsert)) {
                     pstmt.setInt(1, pasien.getId());

@@ -45,7 +45,7 @@ public class PasienController {
     public void loadData() {
         view.setStatusText("Memuat data pasien...");
         
-        // SwingWorker for asynchronous database reading
+        
         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Object[]> doInBackground() throws Exception {
@@ -109,7 +109,7 @@ public class PasienController {
         String golDarah = view.getGolonganDarahInput();
         String alergi = view.getAlergiInput();
 
-        // Validations
+        
         if (nama.isEmpty() || noRM.isEmpty()) {
             JOptionPane.showMessageDialog(view, "Nama dan No. RM wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
             return;
@@ -128,14 +128,14 @@ public class PasienController {
         final Date finalTglLahir = tglLahir;
         view.setStatusText("Menyimpan data...");
 
-        // Insert/Update in separate worker if desired, or database operation thread
+        
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
                 if (selectedPasienId == -1) {
-                    // Create (Insert)
+                    
                     String sql = "INSERT INTO pasien (nama, no_rm, alamat, no_telp, tanggal_lahir, golongan_darah, alergi) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setString(1, nama);
@@ -148,7 +148,7 @@ public class PasienController {
                         pstmt.executeUpdate();
                     }
                 } else {
-                    // Update
+                    
                     String sql = "UPDATE pasien SET nama=?, no_rm=?, alamat=?, no_telp=?, tanggal_lahir=?, golongan_darah=?, alergi=? WHERE id=?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setString(1, nama);
@@ -206,8 +206,8 @@ public class PasienController {
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
-                // First delete from dependent tables (kunjungan, antrian) to avoid constraints, 
-                // or let the database handle cascade, or do it manually. Let's delete references first.
+                
+                
                 String sqlDelAntrian = "DELETE FROM antrian WHERE id_pasien = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelAntrian)) {
                     pstmt.setInt(1, id);

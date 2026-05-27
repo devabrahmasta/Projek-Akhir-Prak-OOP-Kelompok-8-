@@ -8,7 +8,6 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.Color;
 
 public class PasienView extends JPanel {
     private JTable table;
@@ -18,7 +17,7 @@ public class PasienView extends JPanel {
     private JTextField txtNoRM;
     private JTextArea txtAlamat;
     private JTextField txtNoTelp;
-    private JTextField txtTanggalLahir; // Format: YYYY-MM-DD
+    private JTextField txtTanggalLahir; 
     private JComboBox<String> cbGolDarah;
     private JTextField txtAlergi;
     
@@ -32,12 +31,12 @@ public class PasienView extends JPanel {
     
     private JLabel lblStatus;
     
-    // Style constants
+    
     private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84);
     private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F);
-    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F);
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); 
     private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
     private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
     private final Color COLOR_INPUT_BG = new Color(0xF5, 0xF7, 0xF6);
@@ -60,7 +59,7 @@ public class PasienView extends JPanel {
         titleLabel.setForeground(COLOR_TEXT);
         headerPanel.add(titleLabel, BorderLayout.WEST);
         
-        // Search bar
+        
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         searchPanel.setBackground(COLOR_BG);
         
@@ -87,7 +86,7 @@ public class PasienView extends JPanel {
         splitPane.setBorder(null);
         splitPane.setBackground(COLOR_BG);
         
-        // Left Panel - Form
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(COLOR_CARD);
         formPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -101,7 +100,7 @@ public class PasienView extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         
-        // Title Form
+        
         JLabel formTitle = new JLabel("Form Data Pasien");
         formTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         formTitle.setForeground(COLOR_TEXT);
@@ -111,7 +110,7 @@ public class PasienView extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
         
-        // No RM
+        
         formPanel.add(createFormLabel("No. Rekam Medis (RM):"), gbc);
         gbc.gridy++;
         txtNoRM = new JTextField();
@@ -119,7 +118,7 @@ public class PasienView extends JPanel {
         formPanel.add(txtNoRM, gbc);
         
         gbc.gridy++;
-        // Nama
+        
         formPanel.add(createFormLabel("Nama Lengkap:"), gbc);
         gbc.gridy++;
         txtNama = new JTextField();
@@ -127,7 +126,7 @@ public class PasienView extends JPanel {
         formPanel.add(txtNama, gbc);
         
         gbc.gridy++;
-        // Alamat
+        
         formPanel.add(createFormLabel("Alamat:"), gbc);
         gbc.gridy++;
         txtAlamat = new JTextArea(3, 15);
@@ -143,7 +142,7 @@ public class PasienView extends JPanel {
         formPanel.add(new JScrollPane(txtAlamat), gbc);
         
         gbc.gridy++;
-        // No Telp
+        
         formPanel.add(createFormLabel("No. Telepon:"), gbc);
         gbc.gridy++;
         txtNoTelp = new JTextField();
@@ -151,7 +150,7 @@ public class PasienView extends JPanel {
         formPanel.add(txtNoTelp, gbc);
         
         gbc.gridy++;
-        // Tanggal Lahir
+        
         formPanel.add(createFormLabel("Tanggal Lahir (YYYY-MM-DD):"), gbc);
         gbc.gridy++;
         txtTanggalLahir = new JTextField();
@@ -159,7 +158,7 @@ public class PasienView extends JPanel {
         formPanel.add(txtTanggalLahir, gbc);
         
         gbc.gridy++;
-        // Golongan Darah
+        
         formPanel.add(createFormLabel("Golongan Darah:"), gbc);
         gbc.gridy++;
         cbGolDarah = new JComboBox<>(new String[]{"-", "A", "B", "AB", "O"});
@@ -169,14 +168,14 @@ public class PasienView extends JPanel {
         formPanel.add(cbGolDarah, gbc);
         
         gbc.gridy++;
-        // Alergi
+        
         formPanel.add(createFormLabel("Alergi:"), gbc);
         gbc.gridy++;
         txtAlergi = new JTextField();
         styleTextField(txtAlergi);
         formPanel.add(txtAlergi, gbc);
         
-        // Buttons Panel
+        
         gbc.gridy++;
         gbc.insets = new Insets(15, 8, 8, 8);
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 8, 8));
@@ -185,11 +184,11 @@ public class PasienView extends JPanel {
         btnTambah = new JButton("Tambah");
         styleButton(btnTambah, COLOR_PRIMARY);
         btnSimpan = new JButton("Simpan");
-        styleButton(btnSimpan, new Color(46, 125, 50));
+        styleButton(btnSimpan, new Color(46, 125, 50)); 
         btnHapus = new JButton("Hapus");
-        styleButton(btnHapus, new Color(198, 40, 40));
+        styleButton(btnHapus, new Color(198, 40, 40)); 
         btnBatal = new JButton("Batal");
-        styleButton(btnBatal, new Color(97, 97, 97));
+        styleButton(btnBatal, new Color(97, 97, 97)); 
         
         buttonPanel.add(btnTambah);
         buttonPanel.add(btnSimpan);
@@ -203,7 +202,7 @@ public class PasienView extends JPanel {
         lblStatus.setForeground(COLOR_TEXT_MUTED);
         formPanel.add(lblStatus, gbc);
         
-        // Right Panel - Table
+        
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(COLOR_CARD);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(
@@ -217,7 +216,7 @@ public class PasienView extends JPanel {
         tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
         tablePanel.add(tableTitle, BorderLayout.NORTH);
         
-        // Setup JTable
+        
         String[] columns = {"ID", "No. RM", "Nama", "No. Telp", "Tgl Lahir", "Gol. Darah", "Alergi", "Alamat"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -234,16 +233,11 @@ public class PasienView extends JPanel {
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         
-        JScrollPane formScrollPane = new JScrollPane(formPanel);
-        formScrollPane.setBorder(null);
-        formScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        formScrollPane.getViewport().setBackground(COLOR_CARD);
-        
-        splitPane.setLeftComponent(formScrollPane);
+        splitPane.setLeftComponent(formPanel);
         splitPane.setRightComponent(tablePanel);
         add(splitPane, BorderLayout.CENTER);
         
-        // Form Initial State
+        
         setFormEnabled(false);
         btnSimpan.setEnabled(false);
     }
@@ -306,14 +300,14 @@ public class PasienView extends JPanel {
         header.setFont(new Font("Segoe UI", Font.BOLD, 12));
         header.setBorder(BorderFactory.createEmptyBorder());
         
-        // Align headers and cells
+        
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
         renderer.setBackground(COLOR_CARD);
         renderer.setForeground(COLOR_TEXT);
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // UI Helpers & Controllers bridge
+    
     
     public void setFormEnabled(boolean enabled) {
         txtNoRM.setEnabled(enabled);
@@ -346,7 +340,7 @@ public class PasienView extends JPanel {
         txtAlamat.setText(alamat);
     }
     
-    // Listeners
+    
     public void addTambahListener(ActionListener l) { btnTambah.addActionListener(l); }
     public void addSimpanListener(ActionListener l) { btnSimpan.addActionListener(l); }
     public void addHapusListener(ActionListener l) { btnHapus.addActionListener(l); }
@@ -355,7 +349,7 @@ public class PasienView extends JPanel {
     
     public void addTableMouseListener(MouseAdapter l) { table.addMouseListener(l); }
     
-    // Getters for form inputs
+    
     public String getNoRMInput() { return txtNoRM.getText().trim(); }
     public String getNamaInput() { return txtNama.getText().trim(); }
     public String getAlamatInput() { return txtAlamat.getText().trim(); }
@@ -369,7 +363,7 @@ public class PasienView extends JPanel {
     
     public String getCariInput() { return txtCari.getText().trim(); }
     
-    // Table model management
+    
     public DefaultTableModel getTableModel() { return tableModel; }
     public JTable getTable() { return table; }
     

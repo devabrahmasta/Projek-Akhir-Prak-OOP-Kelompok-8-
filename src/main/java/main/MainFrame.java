@@ -20,30 +20,30 @@ public class MainFrame extends JFrame {
     private JPanel contentPanel;
     private CardLayout cardLayout;
     
-    // Sidebar buttons
+    
     private JButton btnDashboard;
     private JButton btnPasien;
     private JButton btnKunjungan;
     private JButton btnAntrian;
     
-    // Views
+    
     private DashboardView dashboardView;
     private PasienView pasienView;
     private KunjunganView kunjunganView;
     private AntrianView antrianView;
     
-    // Controllers
+    
     private DashboardController dashboardController;
     private PasienController pasienController;
     private KunjunganController kunjunganController;
     private AntrianController antrianController;
     
-    // Theme colors
-    private final Color COLOR_SIDEBAR = new Color(0x1F, 0x6F, 0x5F); // Dark Teal
-    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE); // Light Grey
-    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
+    
+    private final Color COLOR_SIDEBAR = new Color(0x1F, 0x6F, 0x5F); 
+    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE); 
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); 
     private final Color COLOR_TEXT = Color.WHITE;
-    private final Color COLOR_TEXT_MUTED = new Color(0x9E, 0xDF, 0xD4); // Mint/Light Grey-Teal for sidebar labels
+    private final Color COLOR_TEXT_MUTED = new Color(0x9E, 0xDF, 0xD4); 
     
     public MainFrame() {
         setTitle("Sistem Manajemen Klinik - Medika Center");
@@ -54,10 +54,10 @@ public class MainFrame extends JFrame {
         initComponents();
         initMVC();
         
-        // Show dashboard by default
+        
         switchPanel("DASHBOARD");
         
-        // Handle clean thread shutdown on exit
+        
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -71,14 +71,14 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
         
-        // Sidebar Panel
+        
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setPreferredSize(new Dimension(240, 0));
         sidebar.setBackground(COLOR_SIDEBAR);
         sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(45, 45, 52)));
         
-        // Branding/Logo
+        
         JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 25));
         brandPanel.setBackground(COLOR_SIDEBAR);
         brandPanel.setMaximumSize(new Dimension(240, 80));
@@ -97,7 +97,7 @@ public class MainFrame extends JFrame {
         
         sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
         
-        // Sidebar Navigation Buttons
+        
         btnDashboard = createSidebarButton("Dashboard", "DASHBOARD");
         btnPasien = createSidebarButton("Data Pasien", "PASIEN");
         btnKunjungan = createSidebarButton("Catatan Kunjungan", "KUNJUNGAN");
@@ -111,7 +111,7 @@ public class MainFrame extends JFrame {
         sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
         sidebar.add(btnAntrian);
         
-        // Footer / Version
+        
         sidebar.add(Box.createVerticalGlue());
         JLabel versionLabel = new JLabel("v1.0.0 - Person A Module");
         versionLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
@@ -122,7 +122,7 @@ public class MainFrame extends JFrame {
         
         add(sidebar, BorderLayout.WEST);
         
-        // Right Main Content Panel (CardLayout)
+        
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(COLOR_BG);
@@ -145,15 +145,15 @@ public class MainFrame extends JFrame {
         btn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                if (btn.getForeground() != COLOR_TEXT) { // If not active
-                    btn.setBackground(new Color(0x14, 0x48, 0x3E)); // Darker Teal Hover
+                if (btn.getForeground() != COLOR_TEXT) { 
+                    btn.setBackground(new Color(0x14, 0x48, 0x3E)); 
                     btn.setForeground(COLOR_TEXT);
                 }
             }
             
             @Override
             public void mouseExited(MouseEvent e) {
-                if (btn.getForeground() != COLOR_TEXT || btn.getBackground() != COLOR_PRIMARY) { // If not active
+                if (btn.getForeground() != COLOR_TEXT || btn.getBackground() != COLOR_PRIMARY) { 
                     btn.setBackground(COLOR_SIDEBAR);
                     btn.setForeground(COLOR_TEXT_MUTED);
                 }
@@ -169,19 +169,19 @@ public class MainFrame extends JFrame {
     }
     
     private void initMVC() {
-        // Instantiate Views
+        
         dashboardView = new DashboardView();
         pasienView = new PasienView();
         kunjunganView = new KunjunganView();
         antrianView = new AntrianView();
         
-        // Add to CardLayout
+        
         contentPanel.add(dashboardView, "DASHBOARD");
         contentPanel.add(pasienView, "PASIEN");
         contentPanel.add(kunjunganView, "KUNJUNGAN");
         contentPanel.add(antrianView, "ANTRIAN");
         
-        // Instantiate Controllers
+        
         dashboardController = new DashboardController(dashboardView);
         pasienController = new PasienController(pasienView);
         kunjunganController = new KunjunganController(kunjunganView);
@@ -191,7 +191,7 @@ public class MainFrame extends JFrame {
     private void switchPanel(String cardName) {
         cardLayout.show(contentPanel, cardName);
         
-        // Update sidebar buttons visual active states
+        
         resetSidebarButtons();
         
         if ("DASHBOARD".equals(cardName)) {
@@ -203,13 +203,13 @@ public class MainFrame extends JFrame {
         } else if ("KUNJUNGAN".equals(cardName)) {
             styleActiveButton(btnKunjungan);
             if (kunjunganController != null) {
-                kunjunganController.loadDropdowns(); // Patients could have been updated
+                kunjunganController.loadDropdowns(); 
                 kunjunganController.loadData();
             }
         } else if ("ANTRIAN".equals(cardName)) {
             styleActiveButton(btnAntrian);
             if (antrianController != null) {
-                antrianController.loadDropdowns(); // Dropdowns could have been updated
+                antrianController.loadDropdowns(); 
                 antrianController.loadData(true);
             }
         }

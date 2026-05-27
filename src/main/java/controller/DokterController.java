@@ -23,11 +23,11 @@ public class DokterController {
     }
 
     private void loadData() {
-        // SwingWorker for database read operations
+        
         SwingWorker<DefaultTableModel, Void> worker = new SwingWorker<DefaultTableModel, Void>() {
             @Override
             protected DefaultTableModel doInBackground() throws Exception {
-                // Mock database operation
+                
                 Thread.sleep(500); 
                 String[] columnNames = {"ID", "Nama", "Spesialisasi"};
                 Object[][] data = {
@@ -51,19 +51,19 @@ public class DokterController {
     }
 
     private void tambahData() {
-        // Mock Add
+        
         JOptionPane.showMessageDialog(view, "Data Dokter Ditambahkan");
         loadData();
     }
 
     private void ubahData() {
-        // Mock Update
+        
         JOptionPane.showMessageDialog(view, "Data Dokter Diubah");
         loadData();
     }
 
     private void hapusData() {
-        // Mock Delete
+        
         JOptionPane.showMessageDialog(view, "Data Dokter Dihapus");
         loadData();
     }

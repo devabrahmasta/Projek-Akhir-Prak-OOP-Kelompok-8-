@@ -21,11 +21,11 @@ public class ResepController {
     }
 
     private void loadData() {
-        // SwingWorker for database read operations
+        
         SwingWorker<DefaultTableModel, Void> worker = new SwingWorker<DefaultTableModel, Void>() {
             @Override
             protected DefaultTableModel doInBackground() throws Exception {
-                // Mock database operation
+                
                 Thread.sleep(500); 
                 String[] columnNames = {"ID", "Kunjungan ID", "Dokter ID", "Keterangan", "Tanggal"};
                 Object[][] data = {

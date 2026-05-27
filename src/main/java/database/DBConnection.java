@@ -30,7 +30,7 @@ public class DBConnection {
         try {
             DatabaseMetaData meta = connection.getMetaData();
             
-            // Check & create pasien table if not exists
+            
             try (Statement stmt = connection.createStatement()) {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS pasien (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
@@ -39,7 +39,7 @@ public class DBConnection {
                     "no_telp VARCHAR(15), " +
                     "tanggal_lahir DATE)");
                 
-                // Table dokter (so we can insert mock doctors)
+                
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS dokter (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "nama VARCHAR(100) NOT NULL, " +
@@ -47,7 +47,7 @@ public class DBConnection {
                     "no_telp VARCHAR(15), " +
                     "jadwal VARCHAR(100))");
                 
-                // Table kunjungan
+                
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS kunjungan (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "id_pasien INT, " +
@@ -58,7 +58,7 @@ public class DBConnection {
                     "FOREIGN KEY (id_pasien) REFERENCES pasien(id), " +
                     "FOREIGN KEY (id_dokter) REFERENCES dokter(id))");
                 
-                // Table antrian
+                
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS antrian (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "id_pasien INT, " +
@@ -70,7 +70,7 @@ public class DBConnection {
                     "FOREIGN KEY (id_dokter) REFERENCES dokter(id))");
             }
             
-            // Force AUTO_INCREMENT on existing tables if they exist but don't have it
+            
             try (Statement stmt = connection.createStatement()) {
                 try { stmt.executeUpdate("ALTER TABLE pasien MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
                 try { stmt.executeUpdate("ALTER TABLE dokter MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
@@ -78,7 +78,7 @@ public class DBConnection {
                 try { stmt.executeUpdate("ALTER TABLE antrian MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
             }
             
-            // Add columns to pasien if not exist
+            
             boolean hasNoRM = false;
             boolean hasGolDarah = false;
             boolean hasAlergi = false;
@@ -104,7 +104,7 @@ public class DBConnection {
                 }
             }
             
-            // Check if table dokter is empty, insert mock data
+            
             try (Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM dokter")) {
                 if (rs.next() && rs.getInt(1) == 0) {

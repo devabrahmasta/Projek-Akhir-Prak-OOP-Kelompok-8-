@@ -9,12 +9,12 @@ import java.util.List;
 
 public class ObatController {
     private ObatView view;
-    // Mock list of obat to allow background thread to read it
+    
     private static List<Obat> obatList = new ArrayList<>();
 
     static {
         obatList.add(new Obat(1, "Paracetamol", 50, 5000));
-        obatList.add(new Obat(2, "Amoxicillin", 5, 15000)); // Low stock mock
+        obatList.add(new Obat(2, "Amoxicillin", 5, 15000)); 
     }
 
     public ObatController(ObatView view) {
@@ -31,11 +31,11 @@ public class ObatController {
     }
 
     private void loadData() {
-        // SwingWorker for database read operations
+        
         SwingWorker<DefaultTableModel, Void> worker = new SwingWorker<DefaultTableModel, Void>() {
             @Override
             protected DefaultTableModel doInBackground() throws Exception {
-                // Mock database operation
+                
                 Thread.sleep(500); 
                 String[] columnNames = {"ID", "Nama", "Stok", "Harga"};
                 Object[][] data = new Object[obatList.size()][4];
@@ -77,7 +77,7 @@ public class ObatController {
         loadData();
     }
     
-    // Method used by StokMonitorThread
+    
     public List<Obat> getSemuaObat() {
         return obatList;
     }

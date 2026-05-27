@@ -47,7 +47,7 @@ public class KunjunganController {
     }
 
     public void loadDropdowns() {
-        // SwingWorker to load dropdowns in background
+        
         SwingWorker<DropdownData, Void> worker = new SwingWorker<>() {
             @Override
             protected DropdownData doInBackground() throws Exception {
@@ -56,7 +56,7 @@ public class KunjunganController {
                 
                 if (connection == null) return new DropdownData(pasienList, dokterList);
 
-                // Load pasien
+                
                 String sqlPasien = "SELECT id, nama, no_rm FROM pasien ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlPasien)) {
@@ -67,7 +67,7 @@ public class KunjunganController {
                     }
                 }
 
-                // Load dokter
+                
                 String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlDokter)) {
@@ -104,7 +104,7 @@ public class KunjunganController {
                 List<Object[]> dataList = new ArrayList<>();
                 if (connection == null) return dataList;
 
-                // Query with SQL JOINs to display Patient and Doctor Names
+                
                 String sql = "SELECT k.id, k.id_pasien, k.id_dokter, p.nama AS nama_pasien, p.no_rm, " +
                              "d.nama AS nama_dokter, d.spesialisasi, k.tanggal_kunjungan, k.keluhan, k.diagnosa " +
                              "FROM kunjungan k " +
@@ -166,7 +166,7 @@ public class KunjunganController {
         view.setFormEnabled(true);
         view.setButtonsState(true);
         
-        // Auto fill current timestamp
+        
         view.setTanggalInput(LocalDateTime.now().format(formatter));
         view.setStatusText("Mencatat kunjungan medis baru");
     }
@@ -185,7 +185,7 @@ public class KunjunganController {
 
         Timestamp tglKunjungan;
         try {
-            // Support standard timestamp parse
+            
             tglKunjungan = Timestamp.valueOf(tglStr);
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(view, "Format Waktu salah! Gunakan YYYY-MM-DD HH:mm:ss", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
@@ -262,22 +262,22 @@ public class KunjunganController {
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
-                // Delete dependecies first (tagihan, resep/detail resep)
-                // Delete detail resep
+                
+                
                 String sqlDelDetResep = "DELETE FROM detail_resep WHERE id_resep IN (SELECT id FROM resep WHERE id_kunjungan = ?)";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelDetResep)) {
                     pstmt.setInt(1, id);
                     pstmt.executeUpdate();
                 }
                 
-                // Delete resep
+                
                 String sqlDelResep = "DELETE FROM resep WHERE id_kunjungan = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelResep)) {
                     pstmt.setInt(1, id);
                     pstmt.executeUpdate();
                 }
                 
-                // Delete tagihan
+                
                 String sqlDelTagihan = "DELETE FROM tagihan WHERE id_kunjungan = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelTagihan)) {
                     pstmt.setInt(1, id);
@@ -390,7 +390,7 @@ public class KunjunganController {
             
             view.setStatusText("Mengambil rincian kunjungan...");
             
-            // SwingWorker to fetch specific row data with precise ComboItem matching
+            
             SwingWorker<KunjunganDetails, Void> worker = new SwingWorker<>() {
                 @Override
                 protected KunjunganDetails doInBackground() throws Exception {
@@ -444,7 +444,7 @@ public class KunjunganController {
         }
     }
 
-    // Helper classes
+    
     private static class DropdownData {
         final List<ComboItem> pasienList;
         final List<ComboItem> dokterList;

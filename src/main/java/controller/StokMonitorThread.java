@@ -18,13 +18,13 @@ public class StokMonitorThread extends Thread {
     public void run() {
         while (running) {
             try {
-                // Check every 30 seconds
+                
                 Thread.sleep(30000);
                 
                 List<Obat> semuaObat = obatController.getSemuaObat();
                 for (Obat obat : semuaObat) {
                     if (obat.getStok() < CRITICAL_STOCK_THRESHOLD) {
-                        // Trigger alert in Event Dispatch Thread
+                        
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(null, 
                                 "Peringatan! Stok obat " + obat.getNama() + " kritis (" + obat.getStok() + " tersisa).", 
@@ -32,9 +32,9 @@ public class StokMonitorThread extends Thread {
                                 JOptionPane.WARNING_MESSAGE);
                         });
                         
-                        // Stop execution
+                        
                         running = false;
-                        break; // Break the loop
+                        break; 
                     }
                 }
             } catch (InterruptedException e) {

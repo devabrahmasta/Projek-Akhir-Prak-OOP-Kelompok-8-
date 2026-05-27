@@ -11,7 +11,7 @@ public class DokterView extends JPanel {
     public DokterView() {
         setLayout(new BorderLayout());
         
-        // Form Panel
+        
         JPanel formPanel = new JPanel(new GridLayout(4, 2, 5, 5));
         formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
@@ -27,7 +27,7 @@ public class DokterView extends JPanel {
         txtSpesialisasi = new JTextField();
         formPanel.add(txtSpesialisasi);
         
-        // Buttons Panel
+        
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnTambah = new JButton("Tambah");
         btnUbah = new JButton("Ubah");
@@ -45,14 +45,14 @@ public class DokterView extends JPanel {
         
         add(topPanel, BorderLayout.NORTH);
         
-        // Table Panel
+        
         table = new JTable();
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
     }
     
-    // Getters for controller access
+    
     public JTable getTable() { return table; }
     public JTextField getTxtId() { return txtId; }
     public JTextField getTxtNama() { return txtNama; }
