@@ -202,7 +202,6 @@ public class AntrianController {
                     if (showMessageInStatus) {
                         view.setStatusText("Antrian dimuat (" + dataList.size() + " antrian)");
                     }
-                    view.setAutoRefreshStatus(refreshThreadRunning);
                 } catch (Exception e) {
                     if (showMessageInStatus) {
                         view.setStatusText("Gagal memuat antrian: " + e.getMessage());
