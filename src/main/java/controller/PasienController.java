@@ -95,9 +95,57 @@ public class PasienController {
         isEditingMode = true;
         selectedPasienId = -1;
         view.clearForm();
-        view.setFormEnabled(true);
+        view.setFormEnabled(false);
         view.setButtonsState(true);
-        view.setStatusText("Mengisi data pasien baru");
+        view.setStatusText("Menghitung No. Rekam Medis baru...");
+        
+        generateNextNoRM();
+    }
+
+    private void generateNextNoRM() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                String nextRM = "RM-00001";
+                if (connection == null) return nextRM;
+
+                String sql = "SELECT no_rm FROM pasien WHERE no_rm LIKE 'RM-%'";
+                try (Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery(sql)) {
+                    int maxNum = 0;
+                    while (rs.next()) {
+                        String rm = rs.getString(1);
+                        if (rm.length() > 3) {
+                            try {
+                                int num = Integer.parseInt(rm.substring(3));
+                                if (num > maxNum) {
+                                    maxNum = num;
+                                }
+                            } catch (NumberFormatException e) {
+                                // ignore
+                            }
+                        }
+                    }
+                    nextRM = String.format("RM-%05d", maxNum + 1);
+                }
+                return nextRM;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    String nextRM = get();
+                    view.fillForm("", nextRM, "", "", "", "", "", "");
+                    view.setFormEnabled(true);
+                    view.setStatusText("Mengisi data pasien baru");
+                } catch (Exception e) {
+                    view.setFormEnabled(true);
+                    view.setStatusText("Error: Gagal memuat No. RM otomatis");
+                    e.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void handleSimpan() {
