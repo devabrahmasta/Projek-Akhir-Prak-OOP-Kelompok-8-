@@ -30,7 +30,6 @@ public class AntrianView extends JPanel {
     private JButton btnHapus;
     
     private JLabel lblStatus;
-    private JLabel lblAutoRefresh;
     
     // Style constants
     private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
@@ -61,11 +60,6 @@ public class AntrianView extends JPanel {
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(COLOR_TEXT);
         titlePanel.add(titleLabel);
-        
-        lblAutoRefresh = new JLabel("● Auto-refresh: Aktif (10s)");
-        lblAutoRefresh.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblAutoRefresh.setForeground(new Color(76, 175, 80)); // Green dot
-        // Remove from titlePanel to avoid layout overflow on top header
         
         headerPanel.add(titlePanel, BorderLayout.WEST);
         
@@ -390,15 +384,5 @@ public class AntrianView extends JPanel {
         btnSelesai.setEnabled(enabled);
         btnBatal.setEnabled(enabled);
         btnHapus.setEnabled(enabled);
-    }
-    
-    public void setAutoRefreshStatus(boolean active) {
-        if (active) {
-            lblAutoRefresh.setText("● Auto-refresh: Aktif (10s)");
-            lblAutoRefresh.setForeground(new Color(76, 175, 80));
-        } else {
-            lblAutoRefresh.setText("○ Auto-refresh: Mati");
-            lblAutoRefresh.setForeground(new Color(198, 40, 40));
-        }
     }
 }
