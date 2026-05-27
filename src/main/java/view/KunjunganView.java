@@ -156,11 +156,11 @@ public class KunjunganView extends JPanel {
         btnTambah = new JButton("Catat Kunjungan");
         styleButton(btnTambah, COLOR_PRIMARY);
         btnSimpan = new JButton("Simpan");
-        styleButton(btnSimpan, new Color(46, 125, 50)); // Green
+        styleButton(btnSimpan, new Color(46, 125, 50));
         btnHapus = new JButton("Hapus");
-        styleButton(btnHapus, new Color(198, 40, 40)); // Red
+        styleButton(btnHapus, new Color(198, 40, 40));
         btnBatal = new JButton("Batal");
-        styleButton(btnBatal, new Color(97, 97, 97)); // Grey
+        styleButton(btnBatal, new Color(97, 97, 97));
         
         buttonPanel.add(btnTambah);
         buttonPanel.add(btnSimpan);

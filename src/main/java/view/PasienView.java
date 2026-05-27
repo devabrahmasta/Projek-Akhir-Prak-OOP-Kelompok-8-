@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.Color;
 
 public class PasienView extends JPanel {
     private JTable table;
@@ -34,9 +35,9 @@ public class PasienView extends JPanel {
     // Style constants
     private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE);
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); // Sea Green
-    private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F); // Dark Teal
-    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F); // Dark Teal Text
+    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84);
+    private final Color COLOR_PRIMARY_HOVER = new Color(0x1F, 0x6F, 0x5F);
+    private final Color COLOR_TEXT = new Color(0x1F, 0x6F, 0x5F);
     private final Color COLOR_TEXT_MUTED = new Color(0x66, 0x80, 0x7A);
     private final Color COLOR_BORDER = new Color(0xD6, 0xDC, 0xDA);
     private final Color COLOR_INPUT_BG = new Color(0xF5, 0xF7, 0xF6);
@@ -184,11 +185,11 @@ public class PasienView extends JPanel {
         btnTambah = new JButton("Tambah");
         styleButton(btnTambah, COLOR_PRIMARY);
         btnSimpan = new JButton("Simpan");
-        styleButton(btnSimpan, new Color(46, 125, 50)); // Green
+        styleButton(btnSimpan, new Color(46, 125, 50));
         btnHapus = new JButton("Hapus");
-        styleButton(btnHapus, new Color(198, 40, 40)); // Red
+        styleButton(btnHapus, new Color(198, 40, 40));
         btnBatal = new JButton("Batal");
-        styleButton(btnBatal, new Color(97, 97, 97)); // Grey
+        styleButton(btnBatal, new Color(97, 97, 97));
         
         buttonPanel.add(btnTambah);
         buttonPanel.add(btnSimpan);
