@@ -99,6 +99,7 @@ public class PasienView extends JPanel {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.weightx = 1.0;
         
         
         JLabel formTitle = new JLabel("Form Data Pasien");
@@ -202,6 +203,9 @@ public class PasienView extends JPanel {
         lblStatus.setForeground(COLOR_TEXT_MUTED);
         formPanel.add(lblStatus, gbc);
         
+        JPanel formWrapper = new JPanel(new BorderLayout());
+        formWrapper.setBackground(COLOR_CARD);
+        formWrapper.add(formPanel, BorderLayout.NORTH);
         
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBackground(COLOR_CARD);
@@ -233,7 +237,14 @@ public class PasienView extends JPanel {
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
         
-        splitPane.setLeftComponent(formPanel);
+        JScrollPane formScrollPane = new JScrollPane(formWrapper);
+        formScrollPane.setBorder(null);
+        formScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        formScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        formScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        formScrollPane.getViewport().setBackground(COLOR_CARD);
+        
+        splitPane.setLeftComponent(formScrollPane);
         splitPane.setRightComponent(tablePanel);
         add(splitPane, BorderLayout.CENTER);
         
