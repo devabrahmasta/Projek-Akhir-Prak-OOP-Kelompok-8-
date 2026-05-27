@@ -70,6 +70,14 @@ public class DBConnection {
                     "FOREIGN KEY (id_dokter) REFERENCES dokter(id))");
             }
             
+            // Force AUTO_INCREMENT on existing tables if they exist but don't have it
+            try (Statement stmt = connection.createStatement()) {
+                try { stmt.executeUpdate("ALTER TABLE pasien MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
+                try { stmt.executeUpdate("ALTER TABLE dokter MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
+                try { stmt.executeUpdate("ALTER TABLE kunjungan MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
+                try { stmt.executeUpdate("ALTER TABLE antrian MODIFY COLUMN id INT AUTO_INCREMENT"); } catch (SQLException e) {}
+            }
+            
             // Add columns to pasien if not exist
             boolean hasNoRM = false;
             boolean hasGolDarah = false;
