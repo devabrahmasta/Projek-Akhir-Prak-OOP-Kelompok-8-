@@ -5,8 +5,6 @@ import view.PasienView;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.*;
@@ -122,7 +120,7 @@ public class PasienController {
                                     maxNum = num;
                                 }
                             } catch (NumberFormatException e) {
-                                // ignore
+                                
                             }
                         }
                     }
@@ -243,7 +241,7 @@ public class PasienController {
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(view, "Apakah Anda yakin ingin menghapus data pasien ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(view, "Apakah Anda yakin ingin menghapus data pasien ini?\nTindakan ini akan menghapus semua riwayat kunjungan, resep, tagihan, dan antrian terkait pasien ini secara permanen.", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
@@ -254,26 +252,66 @@ public class PasienController {
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
-                
-                
-                String sqlDelAntrian = "DELETE FROM antrian WHERE id_pasien = ?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sqlDelAntrian)) {
-                    pstmt.setInt(1, id);
-                    pstmt.executeUpdate();
+                connection.setAutoCommit(false);
+                try {
+                    
+                    String sqlDelDetResep = "DELETE FROM detail_resep WHERE id_resep IN (" +
+                                            "  SELECT id FROM resep WHERE id_kunjungan IN (" +
+                                            "    SELECT id FROM kunjungan WHERE id_pasien = ?" +
+                                            "  )" +
+                                            ")";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelDetResep)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    
+                    String sqlDelResep = "DELETE FROM resep WHERE id_kunjungan IN (" +
+                                         "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
+                                         ")";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelResep)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    
+                    String sqlDelTagihan = "DELETE FROM tagihan WHERE id_kunjungan IN (" +
+                                           "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
+                                           ")";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelTagihan)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    
+                    String sqlDelKunjungan = "DELETE FROM kunjungan WHERE id_pasien = ?";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelKunjungan)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    
+                    String sqlDelAntrian = "DELETE FROM antrian WHERE id_pasien = ?";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelAntrian)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+    
+                    
+                    String sql = "DELETE FROM pasien WHERE id = ?";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                        pstmt.setInt(1, id);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    connection.commit();
+                    return true;
+                } catch (Exception e) {
+                    connection.rollback();
+                    throw e;
+                } finally {
+                    connection.setAutoCommit(true);
                 }
-                
-                String sqlDelKunjungan = "DELETE FROM kunjungan WHERE id_pasien = ?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sqlDelKunjungan)) {
-                    pstmt.setInt(1, id);
-                    pstmt.executeUpdate();
-                }
-
-                String sql = "DELETE FROM pasien WHERE id = ?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                    pstmt.setInt(1, id);
-                    pstmt.executeUpdate();
-                }
-                return true;
             }
 
             @Override
@@ -281,6 +319,7 @@ public class PasienController {
                 try {
                     if (get()) {
                         JOptionPane.showMessageDialog(view, "Data pasien berhasil dihapus!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        isEditingMode = false;
                         view.clearForm();
                         view.setFormEnabled(false);
                         view.setButtonsState(false);
