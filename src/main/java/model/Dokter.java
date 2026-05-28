@@ -20,4 +20,6 @@ public abstract class Dokter extends Pegawai {
     public String getRole() {
         return "Dokter";
     }
+
+    public abstract double hitungTarifKonsultasi();
 }
