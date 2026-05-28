@@ -127,9 +127,9 @@ public class DashboardController {
                                           "ORDER BY k.tanggal_kunjungan DESC LIMIT 10";
                     try (ResultSet rs = stmt.executeQuery(sqlKunjungan)) {
                         while (rs.next()) {
-                            antrianRows.size(); 
+                            java.sql.Timestamp tgl = rs.getTimestamp("tanggal_kunjungan");
                             kunjunganRows.add(new Object[]{
-                                rs.getTimestamp("tanggal_kunjungan").toString(),
+                                tgl != null ? tgl.toString() : "",
                                 rs.getString("nama_pasien"),
                                 rs.getString("keluhan"),
                                 rs.getString("diagnosa")
