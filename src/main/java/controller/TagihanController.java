@@ -91,14 +91,41 @@ public class TagihanController {
         String tanggalStr = view.getTxtTanggal().getText().trim();
         String jenisPembayaran = view.getTxtJenisPembayaran().getText().trim();
 
-        if (kunjunganIdStr.isEmpty() || totalBiayaStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Semua input wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
+        if (kunjunganIdStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Kunjungan ID, Tanggal, dan Jenis Pembayaran wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
             int kunjunganId = Integer.parseInt(kunjunganIdStr);
-            double totalAwal = Double.parseDouble(totalBiayaStr);
+            double totalAwal = 0;
+            if (totalBiayaStr.isEmpty()) {
+                String sqlDokter = "SELECT d.id, d.nama, d.spesialisasi FROM kunjungan k JOIN dokter d ON k.id_dokter = d.id WHERE k.id = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlDokter)) {
+                    pstmt.setInt(1, kunjunganId);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            int docId = rs.getInt("id");
+                            String docNama = rs.getString("nama");
+                            String docSpec = rs.getString("spesialisasi");
+                            Dokter dokter;
+                            if (docSpec.equalsIgnoreCase("Umum")) {
+                                dokter = new DokterUmum(docId, docNama);
+                            } else {
+                                dokter = new DokterSpesialis(docId, docNama, docSpec);
+                            }
+                            totalAwal = dokter.hitungTarifKonsultasi();
+                            JOptionPane.showMessageDialog(view, "Biaya Awal otomatis menggunakan tarif " + dokter.getRole() + " " + docSpec + " (" + docNama + "): Rp " + totalAwal);
+                        } else {
+                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+            } else {
+                totalAwal = Double.parseDouble(totalBiayaStr);
+            }
+
             String formattedTanggalStr = tanggalStr;
             if (formattedTanggalStr.length() == 10) {
                 formattedTanggalStr += " 00:00:00";
@@ -173,15 +200,41 @@ public class TagihanController {
         String tanggalStr = view.getTxtTanggal().getText().trim();
         String jenisPembayaran = view.getTxtJenisPembayaran().getText().trim();
 
-        if (idStr.isEmpty() || kunjunganIdStr.isEmpty() || totalBiayaStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Pilih data dari tabel dan pastikan semua input terisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
+        if (idStr.isEmpty() || kunjunganIdStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Pilih data dari tabel dan pastikan Kunjungan ID, Tanggal, dan Jenis Pembayaran terisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
             int id = Integer.parseInt(idStr);
             int kunjunganId = Integer.parseInt(kunjunganIdStr);
-            double totalAwal = Double.parseDouble(totalBiayaStr);
+            double totalAwal = 0;
+            if (totalBiayaStr.isEmpty()) {
+                String sqlDokter = "SELECT d.id, d.nama, d.spesialisasi FROM kunjungan k JOIN dokter d ON k.id_dokter = d.id WHERE k.id = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlDokter)) {
+                    pstmt.setInt(1, kunjunganId);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            int docId = rs.getInt("id");
+                            String docNama = rs.getString("nama");
+                            String docSpec = rs.getString("spesialisasi");
+                            Dokter dokter;
+                            if (docSpec.equalsIgnoreCase("Umum")) {
+                                dokter = new DokterUmum(docId, docNama);
+                            } else {
+                                dokter = new DokterSpesialis(docId, docNama, docSpec);
+                            }
+                            totalAwal = dokter.hitungTarifKonsultasi();
+                        } else {
+                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+            } else {
+                totalAwal = Double.parseDouble(totalBiayaStr);
+            }
+
             String formattedTanggalStr = tanggalStr;
             if (formattedTanggalStr.length() == 10) {
                 formattedTanggalStr += " 00:00:00";
