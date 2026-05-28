@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConnection {
     private static DBConnection instance;
     private Connection connection;
-    private static final String PORT = "8111";
+    private static final String PORT = "3306";
     private static final String URL = "jdbc:mysql://localhost:"+PORT+"/klinik_db";
     private static final String USER = "root";
     private static final String PASSWORD = "";
