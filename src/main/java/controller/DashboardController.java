@@ -56,26 +56,12 @@ public class DashboardController {
 
                     
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM antrian WHERE status = 'Menunggu' AND tanggal = CURRENT_DATE()")) {
-                        if (rs.next()) {
-                            antrianMenunggu = rs.getInt(1);
-                        } else {
-                            
-                            try (ResultSet rs2 = stmt.executeQuery("SELECT COUNT(*) FROM antrian WHERE status = 'Menunggu'")) {
-                                if (rs2.next()) antrianMenunggu = rs2.getInt(1);
-                            }
-                        }
+                        if (rs.next()) antrianMenunggu = rs.getInt(1);
                     }
 
                     
                     try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM kunjungan WHERE DATE(tanggal_kunjungan) = CURRENT_DATE()")) {
-                        if (rs.next()) {
-                            kunjunganHariIni = rs.getInt(1);
-                        } else {
-                            
-                            try (ResultSet rs2 = stmt.executeQuery("SELECT COUNT(*) FROM kunjungan")) {
-                                if (rs2.next()) kunjunganHariIni = rs2.getInt(1);
-                            }
-                        }
+                        if (rs.next()) kunjunganHariIni = rs.getInt(1);
                     }
 
                     
