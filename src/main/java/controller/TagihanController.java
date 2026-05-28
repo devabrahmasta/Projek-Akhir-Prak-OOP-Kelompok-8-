@@ -117,7 +117,7 @@ public class TagihanController {
                             totalAwal = dokter.hitungTarifKonsultasi();
                             JOptionPane.showMessageDialog(view, "Biaya Awal otomatis menggunakan tarif " + dokter.getRole() + " " + docSpec + " (" + docNama + "): Rp " + totalAwal);
                         } else {
-                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan atau tidak memiliki Dokter Pemeriksa!", "Error", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
                     }
@@ -226,7 +226,7 @@ public class TagihanController {
                             }
                             totalAwal = dokter.hitungTarifKonsultasi();
                         } else {
-                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(view, "Kunjungan ID tidak ditemukan atau tidak memiliki Dokter Pemeriksa!", "Error", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
                     }
