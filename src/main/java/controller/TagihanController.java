@@ -99,7 +99,11 @@ public class TagihanController {
         try {
             int kunjunganId = Integer.parseInt(kunjunganIdStr);
             double totalAwal = Double.parseDouble(totalBiayaStr);
-            Timestamp tanggal = Timestamp.valueOf(tanggalStr);
+            String formattedTanggalStr = tanggalStr;
+            if (formattedTanggalStr.length() == 10) {
+                formattedTanggalStr += " 00:00:00";
+            }
+            Timestamp tanggal = Timestamp.valueOf(formattedTanggalStr);
 
             // Implementasi Polimorfisme Pembayaran
             Pembayaran pembayaran;
@@ -178,7 +182,11 @@ public class TagihanController {
             int id = Integer.parseInt(idStr);
             int kunjunganId = Integer.parseInt(kunjunganIdStr);
             double totalAwal = Double.parseDouble(totalBiayaStr);
-            Timestamp tanggal = Timestamp.valueOf(tanggalStr);
+            String formattedTanggalStr = tanggalStr;
+            if (formattedTanggalStr.length() == 10) {
+                formattedTanggalStr += " 00:00:00";
+            }
+            Timestamp tanggal = Timestamp.valueOf(formattedTanggalStr);
 
             // Re-kalkulasi polimorfis
             Pembayaran pembayaran;
