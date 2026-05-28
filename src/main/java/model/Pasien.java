@@ -1,8 +1,9 @@
 package model;
 
 import java.sql.Date;
+import model.interfaces.Notifiable;
 
-public class Pasien extends Person {
+public class Pasien extends Person implements Notifiable {
     private int id;
     private String nama;
     private String noRM;
@@ -94,5 +95,14 @@ public class Pasien extends Person {
 
     public void setAlergi(String alergi) {
         this.alergi = alergi;
+    }
+
+    @Override
+    public void kirimNotifikasi(String pesan) {
+        String telpStr = (noTelp != null && !noTelp.isEmpty()) ? noTelp : "-";
+        javax.swing.JOptionPane.showMessageDialog(null,
+            "=== NOTIFIKASI PASIEN ===\nKepada: " + nama + " (" + telpStr + ")\n\n" + pesan,
+            "Notifikasi Klinik - Medika Center",
+            javax.swing.JOptionPane.INFORMATION_MESSAGE);
     }
 }
