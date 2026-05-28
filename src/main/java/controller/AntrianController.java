@@ -291,10 +291,40 @@ public class AntrianController {
         }
 
         view.setStatusText("Memperbarui status antrian ke '" + newStatus + "'...");
-        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+        SwingWorker<NotificationResult, Void> worker = new SwingWorker<>() {
             @Override
-            protected Boolean doInBackground() throws Exception {
-                if (connection == null) return false;
+            protected NotificationResult doInBackground() throws Exception {
+                if (connection == null) return new NotificationResult(false, null, "", 0);
+
+                model.Pasien pasien = null;
+                String namaDokter = "";
+                int nomorAntrian = 0;
+
+                String sqlDetails = "SELECT p.id, p.nama, p.no_rm, p.alamat, p.no_telp, p.tanggal_lahir, p.golongan_darah, p.alergi, " +
+                                     "d.nama AS nama_dokter, a.nomor_antrian " +
+                                     "FROM antrian a " +
+                                     "JOIN pasien p ON a.id_pasien = p.id " +
+                                     "JOIN dokter d ON a.id_dokter = d.id " +
+                                     "WHERE a.id = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlDetails)) {
+                    pstmt.setInt(1, selectedAntrianId);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            pasien = new model.Pasien(
+                                rs.getInt("id"),
+                                rs.getString("nama"),
+                                rs.getString("no_rm"),
+                                rs.getString("alamat"),
+                                rs.getString("no_telp"),
+                                rs.getDate("tanggal_lahir"),
+                                rs.getString("golongan_darah"),
+                                rs.getString("alergi")
+                            );
+                            namaDokter = rs.getString("nama_dokter");
+                            nomorAntrian = rs.getInt("nomor_antrian");
+                        }
+                    }
+                }
 
                 String sql = "UPDATE antrian SET status = ? WHERE id = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -302,18 +332,39 @@ public class AntrianController {
                     pstmt.setInt(2, selectedAntrianId);
                     pstmt.executeUpdate();
                 }
-                return true;
+
+                return new NotificationResult(true, pasien, namaDokter, nomorAntrian);
             }
 
             @Override
             protected void done() {
                 try {
-                    if (get()) {
+                    NotificationResult result = get();
+                    if (result.success) {
                         view.setStatusText("Status antrian diperbarui!");
                         view.clearForm();
                         selectedAntrianId = -1;
                         view.setSelectionButtonsEnabled(false);
                         loadData(true);
+
+                        if (result.pasien != null) {
+                            if (newStatus.equals("Dipanggil")) {
+                                result.pasien.kirimNotifikasi(
+                                    "Panggilan Antrian!\n\nHalo " + result.pasien.getNama() + ",\nNomor antrian Anda (" + 
+                                    result.nomorAntrian + ") saat ini sedang DIPANGGIL.\nSilakan segera menuju ke ruangan periksa dr. " + result.namaDokter + "."
+                                );
+                            } else if (newStatus.equals("Selesai")) {
+                                result.pasien.kirimNotifikasi(
+                                    "Pemeriksaan Selesai!\n\nHalo " + result.pasien.getNama() + ",\nPemeriksaan medis Anda dengan dr. " + 
+                                    result.namaDokter + " telah SELESAI.\nTerima kasih telah berkunjung ke Medika Center."
+                                );
+                            } else if (newStatus.equals("Batal")) {
+                                result.pasien.kirimNotifikasi(
+                                    "Pembatalan Antrian!\n\nHalo " + result.pasien.getNama() + ",\nNomor antrian Anda (" + 
+                                    result.nomorAntrian + ") untuk dr. " + result.namaDokter + " telah kami BATALKAN sesuai permintaan."
+                                );
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(view, "Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -382,6 +433,20 @@ public class AntrianController {
         DropdownData(List<ComboItem> pasienList, List<ComboItem> dokterList) {
             this.pasienList = pasienList;
             this.dokterList = dokterList;
+        }
+    }
+
+    private static class NotificationResult {
+        final boolean success;
+        final model.Pasien pasien;
+        final String namaDokter;
+        final int nomorAntrian;
+
+        NotificationResult(boolean success, model.Pasien pasien, String namaDokter, int nomorAntrian) {
+            this.success = success;
+            this.pasien = pasien;
+            this.namaDokter = namaDokter;
+            this.nomorAntrian = nomorAntrian;
         }
     }
 }
