@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8111
--- Waktu pembuatan: 27 Bulan Mei 2026 pada 18.50
+-- Waktu pembuatan: 30 Bulan Mei 2026 pada 11.11
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -45,7 +45,8 @@ CREATE TABLE `antrian` (
 CREATE TABLE `apoteker` (
   `id` int(11) NOT NULL,
   `nama` varchar(100) NOT NULL,
-  `no_telp` varchar(15) DEFAULT NULL
+  `no_telp` varchar(15) DEFAULT NULL,
+  `id_user` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -73,17 +74,18 @@ CREATE TABLE `dokter` (
   `nama` varchar(100) NOT NULL,
   `spesialisasi` varchar(100) DEFAULT NULL,
   `no_telp` varchar(15) DEFAULT NULL,
-  `jadwal` varchar(100) DEFAULT NULL
+  `jadwal` varchar(100) DEFAULT NULL,
+  `id_user` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data untuk tabel `dokter`
 --
 
-INSERT INTO `dokter` (`id`, `nama`, `spesialisasi`, `no_telp`, `jadwal`) VALUES
-(1, 'dr. Andi Pratama', 'Umum', '081234567890', 'Senin - Jumat'),
-(2, 'dr. Budi Santoso', 'Spesialis Anak', '081234567891', 'Senin - Rabu'),
-(3, 'dr. Citra Lestari', 'Spesialis Gigi', '081234567892', 'Kamis - Sabtu');
+INSERT INTO `dokter` (`id`, `nama`, `spesialisasi`, `no_telp`, `jadwal`, `id_user`) VALUES
+(1, 'dr. Andi Pratama', 'Umum', '081234567890', 'Senin - Jumat', 3),
+(2, 'dr. Budi Santoso', 'Spesialis Anak', '081234567891', 'Senin - Rabu', NULL),
+(3, 'dr. Citra Lestari', 'Spesialis Gigi', '081234567892', 'Kamis - Sabtu', NULL);
 
 -- --------------------------------------------------------
 
@@ -142,19 +144,6 @@ INSERT INTO `pasien` (`id`, `nama`, `alamat`, `no_telp`, `tanggal_lahir`, `no_rm
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `pegawai`
---
-
-CREATE TABLE `pegawai` (
-  `id` int(11) NOT NULL,
-  `nama` varchar(100) NOT NULL,
-  `jabatan` varchar(50) DEFAULT NULL,
-  `no_telp` varchar(15) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Struktur dari tabel `resep`
 --
 
@@ -181,6 +170,31 @@ CREATE TABLE `tagihan` (
   `jenis_pembayaran` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `role` enum('admin','resepsionis','dokter','apoteker') NOT NULL,
+  `aktif` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `password`, `nama`, `role`, `aktif`, `created_at`) VALUES
+(1, 'admin_medika', 'admin123', 'Super Admin', 'admin', 1, '2026-05-30 08:22:56'),
+(2, 'resep_front', 'resep123', 'Resepsionis Utama', 'resepsionis', 1, '2026-05-30 08:22:56'),
+(3, 'dr_andi', 'andi123', 'dr. Andi Pratama', 'dokter', 1, '2026-05-30 08:22:56');
+
 --
 -- Indexes for dumped tables
 --
@@ -197,7 +211,8 @@ ALTER TABLE `antrian`
 -- Indeks untuk tabel `apoteker`
 --
 ALTER TABLE `apoteker`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_apoteker_user` (`id_user`);
 
 --
 -- Indeks untuk tabel `detail_resep`
@@ -211,7 +226,8 @@ ALTER TABLE `detail_resep`
 -- Indeks untuk tabel `dokter`
 --
 ALTER TABLE `dokter`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_dokter_user` (`id_user`);
 
 --
 -- Indeks untuk tabel `kunjungan`
@@ -234,12 +250,6 @@ ALTER TABLE `pasien`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeks untuk tabel `pegawai`
---
-ALTER TABLE `pegawai`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indeks untuk tabel `resep`
 --
 ALTER TABLE `resep`
@@ -253,6 +263,13 @@ ALTER TABLE `resep`
 ALTER TABLE `tagihan`
   ADD PRIMARY KEY (`id`),
   ADD KEY `id_kunjungan` (`id_kunjungan`);
+
+--
+-- Indeks untuk tabel `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
 
 --
 -- AUTO_INCREMENT untuk tabel yang dibuang
@@ -301,12 +318,6 @@ ALTER TABLE `pasien`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT untuk tabel `pegawai`
---
-ALTER TABLE `pegawai`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT untuk tabel `resep`
 --
 ALTER TABLE `resep`
@@ -317,6 +328,12 @@ ALTER TABLE `resep`
 --
 ALTER TABLE `tagihan`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT untuk tabel `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
@@ -330,11 +347,23 @@ ALTER TABLE `antrian`
   ADD CONSTRAINT `antrian_ibfk_2` FOREIGN KEY (`id_dokter`) REFERENCES `dokter` (`id`);
 
 --
+-- Ketidakleluasaan untuk tabel `apoteker`
+--
+ALTER TABLE `apoteker`
+  ADD CONSTRAINT `fk_apoteker_user` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`);
+
+--
 -- Ketidakleluasaan untuk tabel `detail_resep`
 --
 ALTER TABLE `detail_resep`
   ADD CONSTRAINT `detail_resep_ibfk_1` FOREIGN KEY (`id_resep`) REFERENCES `resep` (`id`),
   ADD CONSTRAINT `detail_resep_ibfk_2` FOREIGN KEY (`id_obat`) REFERENCES `obat` (`id`);
+
+--
+-- Ketidakleluasaan untuk tabel `dokter`
+--
+ALTER TABLE `dokter`
+  ADD CONSTRAINT `fk_dokter_user` FOREIGN KEY (`id_user`) REFERENCES `users` (`id`);
 
 --
 -- Ketidakleluasaan untuk tabel `kunjungan`

@@ -9,13 +9,17 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
+import java.util.List;
 
 public class KunjunganView extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
     
+    private JList<Object> listAntrian;
+    private DefaultListModel<Object> listAntrianModel;
+    
     private JComboBox<ComboItem> cbPasien;
-    private JComboBox<ComboItem> cbDokter;
+    private JLabel lblDokter;
     private JTextField txtTanggal; 
     private JTextArea txtKeluhan;
     private JTextArea txtDiagnosa;
@@ -81,13 +85,70 @@ public class KunjunganView extends JPanel {
     }
     
     private void initContent() {
+        JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplit.setDividerLocation(220);
+        mainSplit.setBorder(null);
+        mainSplit.setBackground(COLOR_BG);
+        mainSplit.setOpaque(false);
+        
+        // --- PANEL KIRI 1 (ANTRIAN) ---
+        JPanel antrianWrapper = createRoundedWrapper();
+        
+        JPanel antrianPanel = new JPanel(new BorderLayout());
+        antrianPanel.setOpaque(false);
+        
+        JLabel lblTitleAntrian = new JLabel("Antrian Aktif");
+        lblTitleAntrian.setFont(new Font("Poppins", Font.BOLD, 16));
+        lblTitleAntrian.setForeground(COLOR_TEXT);
+        lblTitleAntrian.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        antrianPanel.add(lblTitleAntrian, BorderLayout.NORTH);
+        
+        listAntrianModel = new DefaultListModel<>();
+        listAntrian = new JList<>(listAntrianModel);
+        listAntrian.setBackground(COLOR_CARD);
+        listAntrian.setFont(new Font("Poppins", Font.PLAIN, 13));
+        listAntrian.setSelectionBackground(COLOR_PRIMARY);
+        listAntrian.setSelectionForeground(Color.WHITE);
+        listAntrian.setFixedCellHeight(40);
+        
+        listAntrian.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                label.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+                return label;
+            }
+        });
+        
+        listAntrian.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Object selected = listAntrian.getSelectedValue();
+                if (selected != null) {
+                    String selectedStr = selected.toString();
+                    for (int i = 0; i < cbPasien.getItemCount(); i++) {
+                        if (selectedStr.contains(cbPasien.getItemAt(i).getLabel())) {
+                            cbPasien.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        
+        JScrollPane scrollAntrian = new JScrollPane(listAntrian);
+        scrollAntrian.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        antrianPanel.add(scrollAntrian, BorderLayout.CENTER);
+        
+        antrianWrapper.add(antrianPanel, BorderLayout.CENTER);
+        
+        // --- SPLIT PANE TENGAH & KANAN (FORM & TABEL) ---
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(380); 
         splitPane.setBorder(null);
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
         
-        // --- PANEL KIRI (FORM) ---
+        // --- PANEL TENGAH (FORM) ---
         JPanel formWrapper = createRoundedWrapper();
         
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -118,9 +179,24 @@ public class KunjunganView extends JPanel {
         gbc.gridy++;
         formPanel.add(createFormLabel("Dokter Pemeriksa:"), gbc);
         gbc.gridy++;
-        cbDokter = new JComboBox<>();
-        styleComboBox(cbDokter);
-        formPanel.add(cbDokter, gbc);
+        
+        lblDokter = new JLabel();
+        try {
+            lblDokter.setText(SessionManager.getUser().getNama());
+        } catch (Exception e) {
+            lblDokter.setText("Dr. Default"); 
+        }
+        lblDokter.setFont(new Font("Poppins", Font.BOLD, 13));
+        lblDokter.setForeground(COLOR_TEXT);
+        
+        JPanel dokterWrapper = new JPanel(new BorderLayout());
+        dokterWrapper.setBackground(COLOR_INPUT_BG);
+        dokterWrapper.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(COLOR_BORDER, 1),
+            BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+        dokterWrapper.add(lblDokter, BorderLayout.WEST);
+        formPanel.add(dokterWrapper, gbc);
         
         gbc.gridy++;
         formPanel.add(createFormLabel("Waktu (YYYY-MM-DD HH:mm:ss):"), gbc);
@@ -265,7 +341,11 @@ public class KunjunganView extends JPanel {
         
         splitPane.setLeftComponent(formWrapper);
         splitPane.setRightComponent(tableWrapper);
-        add(splitPane, BorderLayout.CENTER);
+        
+        mainSplit.setLeftComponent(antrianWrapper);
+        mainSplit.setRightComponent(splitPane);
+        
+        add(mainSplit, BorderLayout.CENTER);
         
         setFormEnabled(false);
         setButtonsState(false);
@@ -407,7 +487,7 @@ public class KunjunganView extends JPanel {
     
     public void setFormEnabled(boolean enabled) {
         cbPasien.setEnabled(enabled);
-        cbDokter.setEnabled(enabled);
+        // lblDokter is read-only
         txtTanggal.setEnabled(enabled);
         txtKeluhan.setEnabled(enabled);
         txtDiagnosa.setEnabled(enabled);
@@ -415,7 +495,7 @@ public class KunjunganView extends JPanel {
     
     public void clearForm() {
         if (cbPasien.getItemCount() > 0) cbPasien.setSelectedIndex(0);
-        if (cbDokter.getItemCount() > 0) cbDokter.setSelectedIndex(0);
+        // lblDokter is read-only
         txtTanggal.setText("");
         txtKeluhan.setText("");
         txtDiagnosa.setText("");
@@ -424,7 +504,7 @@ public class KunjunganView extends JPanel {
     
     public void fillForm(ComboItem pasienItem, ComboItem dokterItem, String tgl, String keluhan, String diagnosa) {
         cbPasien.setSelectedItem(pasienItem);
-        cbDokter.setSelectedItem(dokterItem);
+        // lblDokter is read-only
         txtTanggal.setText(tgl);
         txtKeluhan.setText(keluhan);
         txtDiagnosa.setText(diagnosa);
@@ -438,14 +518,13 @@ public class KunjunganView extends JPanel {
     }
     
     public void setDokterList(ComboItem[] items) {
-        cbDokter.removeAllItems();
-        for (ComboItem item : items) {
-            cbDokter.addItem(item);
-        }
+        // read-only, no combobox
     }
     
     public ComboItem getSelectedPasien() { return (ComboItem) cbPasien.getSelectedItem(); }
-    public ComboItem getSelectedDokter() { return (ComboItem) cbDokter.getSelectedItem(); }
+    public ComboItem getSelectedDokter() { 
+        return null; // read-only di view ini
+    }
     public String getTanggalInput() { return txtTanggal.getText().trim(); }
     public String getKeluhanInput() { return txtKeluhan.getText().trim(); }
     public String getDiagnosaInput() { return txtDiagnosa.getText().trim(); }
@@ -485,5 +564,24 @@ public class KunjunganView extends JPanel {
         boolean hasSelection = table.getSelectedRow() != -1;
         btnHapus.setEnabled(hasSelection && !isEditing);
         btnBatal.setEnabled(isEditing || hasSelection);
+    }
+    
+    // --- METHOD TAMBAHAN ANTRIAN ---
+    
+    public void setAntrianAktif(List<?> items) {
+        listAntrianModel.clear();
+        if (items != null) {
+            for (Object item : items) {
+                listAntrianModel.addElement(item);
+            }
+        }
+    }
+    
+    public void addAntrianSelectListener(ListSelectionListener l) {
+        listAntrian.addListSelectionListener(l);
+    }
+    
+    public int getSelectedAntrian() {
+        return listAntrian.getSelectedIndex();
     }
 }

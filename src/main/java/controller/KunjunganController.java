@@ -28,6 +28,7 @@ public class KunjunganController {
         
         initListeners();
         loadDropdowns();
+        loadAntrian();
         loadData();
     }
 
@@ -47,16 +48,12 @@ public class KunjunganController {
     }
 
     public void loadDropdowns() {
-        
-        SwingWorker<DropdownData, Void> worker = new SwingWorker<>() {
+        SwingWorker<List<ComboItem>, Void> worker = new SwingWorker<>() {
             @Override
-            protected DropdownData doInBackground() throws Exception {
+            protected List<ComboItem> doInBackground() throws Exception {
                 List<ComboItem> pasienList = new ArrayList<>();
-                List<ComboItem> dokterList = new ArrayList<>();
-                
-                if (connection == null) return new DropdownData(pasienList, dokterList);
+                if (connection == null) return pasienList;
 
-                
                 String sqlPasien = "SELECT id, nama, no_rm FROM pasien ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlPasien)) {
@@ -66,27 +63,56 @@ public class KunjunganController {
                         pasienList.add(new ComboItem(id, label));
                     }
                 }
-
-                
-                String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter ORDER BY nama ASC";
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sqlDokter)) {
-                    while (rs.next()) {
-                        int id = rs.getInt("id");
-                        String label = rs.getString("nama") + " - " + rs.getString("spesialisasi");
-                        dokterList.add(new ComboItem(id, label));
-                    }
-                }
-
-                return new DropdownData(pasienList, dokterList);
+                return pasienList;
             }
 
             @Override
             protected void done() {
                 try {
-                    DropdownData data = get();
-                    view.setPasienList(data.pasienList.toArray(new ComboItem[0]));
-                    view.setDokterList(data.dokterList.toArray(new ComboItem[0]));
+                    List<ComboItem> pasienList = get();
+                    view.setPasienList(pasienList.toArray(new ComboItem[0]));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
+    }
+    
+    public void loadAntrian() {
+        SwingWorker<List<AntrianItem>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<AntrianItem> doInBackground() throws Exception {
+                List<AntrianItem> list = new ArrayList<>();
+                if (connection == null) return list;
+                
+                int idDokter = SessionManager.getUser().getId();
+                String sql = "SELECT a.id, a.id_pasien, a.nomor_antrian, p.nama, p.no_rm " +
+                             "FROM antrian a JOIN pasien p ON a.id_pasien = p.id " +
+                             "WHERE a.id_dokter = ? AND DATE(a.tanggal) = CURRENT_DATE AND a.status != 'Selesai' " +
+                             "ORDER BY a.nomor_antrian ASC";
+                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                    pstmt.setInt(1, idDokter);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            list.add(new AntrianItem(
+                                rs.getInt("id"), 
+                                rs.getInt("id_pasien"), 
+                                rs.getInt("nomor_antrian"), 
+                                rs.getString("nama"),
+                                rs.getString("no_rm")
+                            ));
+                        }
+                    }
+                }
+                return list;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<AntrianItem> list = get();
+                    view.setAntrianAktif(list);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -104,32 +130,35 @@ public class KunjunganController {
                 List<Object[]> dataList = new ArrayList<>();
                 if (connection == null) return dataList;
 
-                
+                int idDokter = SessionManager.getUser().getId();
                 String sql = "SELECT k.id, k.id_pasien, k.id_dokter, p.nama AS nama_pasien, p.no_rm, " +
                              "d.nama AS nama_dokter, d.spesialisasi, k.tanggal_kunjungan, k.keluhan, k.diagnosa " +
                              "FROM kunjungan k " +
                              "JOIN pasien p ON k.id_pasien = p.id " +
                              "JOIN dokter d ON k.id_dokter = d.id " +
+                             "WHERE k.id_dokter = ? " +
                              "ORDER BY k.tanggal_kunjungan DESC, k.id DESC";
                              
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        int id = rs.getInt("id");
-                        String pasienLabel = rs.getString("nama_pasien") + " (" + rs.getString("no_rm") + ")";
-                        String dokterLabel = rs.getString("nama_dokter") + " - " + rs.getString("spesialisasi");
-                        Timestamp tgl = rs.getTimestamp("tanggal_kunjungan");
-                        String keluhan = rs.getString("keluhan");
-                        String diagnosa = rs.getString("diagnosa");
-                        
-                        dataList.add(new Object[]{
-                            id, 
-                            pasienLabel, 
-                            dokterLabel, 
-                            tgl != null ? tgl.toString() : "", 
-                            keluhan, 
-                            diagnosa
-                        });
+                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                    pstmt.setInt(1, idDokter);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            int id = rs.getInt("id");
+                            String pasienLabel = rs.getString("nama_pasien") + " (" + rs.getString("no_rm") + ")";
+                            String dokterLabel = rs.getString("nama_dokter") + " - " + rs.getString("spesialisasi");
+                            Timestamp tgl = rs.getTimestamp("tanggal_kunjungan");
+                            String keluhan = rs.getString("keluhan");
+                            String diagnosa = rs.getString("diagnosa");
+                            
+                            dataList.add(new Object[]{
+                                id, 
+                                pasienLabel, 
+                                dokterLabel, 
+                                tgl != null ? tgl.toString() : "", 
+                                keluhan, 
+                                diagnosa
+                            });
+                        }
                     }
                 }
                 return dataList;
@@ -155,8 +184,8 @@ public class KunjunganController {
     }
 
     private void handleTambah() {
-        if (view.getSelectedPasien() == null || view.getSelectedDokter() == null) {
-            JOptionPane.showMessageDialog(view, "Pastikan data Pasien dan Dokter sudah terdaftar!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+        if (view.getSelectedPasien() == null) {
+            JOptionPane.showMessageDialog(view, "Pastikan data Pasien sudah terdaftar!", "Peringatan", JOptionPane.WARNING_MESSAGE);
             return;
         }
         
@@ -166,26 +195,24 @@ public class KunjunganController {
         view.setFormEnabled(true);
         view.setButtonsState(true);
         
-        
         view.setTanggalInput(LocalDateTime.now().format(formatter));
         view.setStatusText("Mencatat kunjungan medis baru");
     }
 
     private void handleSimpan() {
         ComboItem pasien = view.getSelectedPasien();
-        ComboItem dokter = view.getSelectedDokter();
         String tglStr = view.getTanggalInput();
         String keluhan = view.getKeluhanInput();
         String diagnosa = view.getDiagnosaInput();
+        int idDokter = SessionManager.getUser().getId();
 
-        if (pasien == null || dokter == null || tglStr.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Pasien, Dokter, dan Waktu wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
+        if (pasien == null || tglStr.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "Pasien dan Waktu wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Timestamp tglKunjungan;
         try {
-            
             tglKunjungan = Timestamp.valueOf(tglStr);
         } catch (IllegalArgumentException e) {
             JOptionPane.showMessageDialog(view, "Format Waktu salah! Gunakan YYYY-MM-DD HH:mm:ss", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
@@ -202,17 +229,25 @@ public class KunjunganController {
                     String sql = "INSERT INTO kunjungan (id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa) VALUES (?, ?, ?, ?, ?)";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setInt(1, pasien.getId());
-                        pstmt.setInt(2, dokter.getId());
+                        pstmt.setInt(2, idDokter);
                         pstmt.setTimestamp(3, tglKunjungan);
                         pstmt.setString(4, keluhan);
                         pstmt.setString(5, diagnosa);
+                        pstmt.executeUpdate();
+                    }
+                    
+                    // Opsional: Update status antrian menjadi 'Selesai' jika ada
+                    String sqlAntrian = "UPDATE antrian SET status = 'Selesai' WHERE id_pasien = ? AND id_dokter = ? AND DATE(tanggal) = CURRENT_DATE";
+                    try (PreparedStatement pstmt = connection.prepareStatement(sqlAntrian)) {
+                        pstmt.setInt(1, pasien.getId());
+                        pstmt.setInt(2, idDokter);
                         pstmt.executeUpdate();
                     }
                 } else {
                     String sql = "UPDATE kunjungan SET id_pasien=?, id_dokter=?, tanggal_kunjungan=?, keluhan=?, diagnosa=? WHERE id=?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setInt(1, pasien.getId());
-                        pstmt.setInt(2, dokter.getId());
+                        pstmt.setInt(2, idDokter);
                         pstmt.setTimestamp(3, tglKunjungan);
                         pstmt.setString(4, keluhan);
                         pstmt.setString(5, diagnosa);
@@ -234,6 +269,7 @@ public class KunjunganController {
                         view.setFormEnabled(false);
                         view.setButtonsState(false);
                         loadData();
+                        loadAntrian();
                     }
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(view, "Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
@@ -262,21 +298,17 @@ public class KunjunganController {
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
-                
-                
                 String sqlDelDetResep = "DELETE FROM detail_resep WHERE id_resep IN (SELECT id FROM resep WHERE id_kunjungan = ?)";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelDetResep)) {
                     pstmt.setInt(1, id);
                     pstmt.executeUpdate();
                 }
                 
-                
                 String sqlDelResep = "DELETE FROM resep WHERE id_kunjungan = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelResep)) {
                     pstmt.setInt(1, id);
                     pstmt.executeUpdate();
                 }
-                
                 
                 String sqlDelTagihan = "DELETE FROM tagihan WHERE id_kunjungan = ?";
                 try (PreparedStatement pstmt = connection.prepareStatement(sqlDelTagihan)) {
@@ -333,17 +365,19 @@ public class KunjunganController {
             protected List<Object[]> doInBackground() throws Exception {
                 List<Object[]> dataList = new ArrayList<>();
                 if (connection == null) return dataList;
+                
+                int idDokter = SessionManager.getUser().getId();
 
                 String sql = "SELECT k.id, k.id_pasien, k.id_dokter, p.nama AS nama_pasien, p.no_rm, " +
                              "d.nama AS nama_dokter, d.spesialisasi, k.tanggal_kunjungan, k.keluhan, k.diagnosa " +
                              "FROM kunjungan k " +
                              "JOIN pasien p ON k.id_pasien = p.id " +
                              "JOIN dokter d ON k.id_dokter = d.id " +
-                             "WHERE p.nama LIKE ? OR d.nama LIKE ? OR k.diagnosa LIKE ? " +
+                             "WHERE k.id_dokter = ? AND (p.nama LIKE ? OR k.diagnosa LIKE ?) " +
                              "ORDER BY k.tanggal_kunjungan DESC";
                              
                 try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                    pstmt.setString(1, "%" + keyword + "%");
+                    pstmt.setInt(1, idDokter);
                     pstmt.setString(2, "%" + keyword + "%");
                     pstmt.setString(3, "%" + keyword + "%");
                     try (ResultSet rs = pstmt.executeQuery()) {
@@ -390,15 +424,16 @@ public class KunjunganController {
             
             view.setStatusText("Mengambil rincian kunjungan...");
             
-            
             SwingWorker<KunjunganDetails, Void> worker = new SwingWorker<>() {
                 @Override
                 protected KunjunganDetails doInBackground() throws Exception {
                     if (connection == null) return null;
                     
-                    String sql = "SELECT id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa FROM kunjungan WHERE id = ?";
+                    int idDokter = SessionManager.getUser().getId();
+                    String sql = "SELECT id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa FROM kunjungan WHERE id = ? AND id_dokter = ?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setInt(1, selectedKunjunganId);
+                        pstmt.setInt(2, idDokter);
                         try (ResultSet rs = pstmt.executeQuery()) {
                             if (rs.next()) {
                                 return new KunjunganDetails(
@@ -444,14 +479,25 @@ public class KunjunganController {
         }
     }
 
-    
-    private static class DropdownData {
-        final List<ComboItem> pasienList;
-        final List<ComboItem> dokterList;
-
-        DropdownData(List<ComboItem> pasienList, List<ComboItem> dokterList) {
-            this.pasienList = pasienList;
-            this.dokterList = dokterList;
+    private static class AntrianItem {
+        final int idAntrian;
+        final int idPasien;
+        final int nomorAntrian;
+        final String namaPasien;
+        final String noRm;
+        
+        AntrianItem(int idAntrian, int idPasien, int nomorAntrian, String namaPasien, String noRm) {
+            this.idAntrian = idAntrian;
+            this.idPasien = idPasien;
+            this.nomorAntrian = nomorAntrian;
+            this.namaPasien = namaPasien;
+            this.noRm = noRm;
+        }
+        
+        @Override
+        public String toString() {
+            // Include rm so view logic can match the string with cbPasien label easily
+            return "Antrian " + nomorAntrian + " - " + namaPasien + " (" + noRm + ")";
         }
     }
 
