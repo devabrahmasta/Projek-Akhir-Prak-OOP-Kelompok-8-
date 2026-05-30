@@ -4,6 +4,7 @@ import controller.AntrianController;
 import controller.DashboardController;
 import controller.KunjunganController;
 import controller.PasienController;
+import controller.SessionManager;
 import view.AntrianView;
 import view.DashboardView;
 import view.KunjunganView;
@@ -15,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import view.LoginView;
 
 public class MainFrame extends JFrame {
     private JPanel contentPanel;
@@ -73,7 +75,7 @@ public class MainFrame extends JFrame {
         sidebar.setBackground(COLOR_PRIMARY);
         sidebar.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
         
-        // Logo & Brand (UPDATE SESUAI INSTRUKSI)
+        // Logo & Brand
         JPanel brandPanel = new JPanel();
         brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.X_AXIS));
         brandPanel.setOpaque(false);
@@ -93,42 +95,84 @@ public class MainFrame extends JFrame {
         lblLogoText.setForeground(Color.WHITE);
         
         brandPanel.add(lblLogoImage);
-        brandPanel.add(Box.createRigidArea(new Dimension(15, 0))); // Jarak antara logo dan teks
+        brandPanel.add(Box.createRigidArea(new Dimension(15, 0)));
         brandPanel.add(lblLogoText);
         
         sidebar.add(brandPanel);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 40)));
         
-        // Menu Buttons
+        // Tampilkan info user yang login
+        if (SessionManager.isLoggedIn()) {
+            JLabel lblUser = new JLabel("Halo, " + SessionManager.getUser().getNama());
+            lblUser.setFont(new Font("Poppins", Font.PLAIN, 12));
+            lblUser.setForeground(new Color(255, 255, 255, 200));
+            sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+            sidebar.add(lblUser);
+        }
+
+        sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
+        
+        // Menu Buttons - Inisialisasi
         btnDashboard = createSidebarButton("Dashboard", "DASHBOARD");
         btnPasien = createSidebarButton("Data Pasien", "PASIEN");
         btnKunjungan = createSidebarButton("Kunjungan", "KUNJUNGAN");
         btnAntrian = createSidebarButton("Antrian", "ANTRIAN");
+        // Asumsi tombol tagihan dibuat (sesuaikan dengan inisialisasi view Tagihan)
+        // btnTagihan = createSidebarButton("Tagihan", "TAGIHAN"); 
         
-        sidebar.add(btnDashboard);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnPasien);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnKunjungan);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnAntrian);
+        // --- LOGIKA FILTER ROLE ---
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase() : "";
         
+        if (role.equals("admin") || role.equals("resepsionis")) {
+            sidebar.add(btnDashboard);
+            sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+            sidebar.add(btnPasien);
+            sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+            sidebar.add(btnAntrian);
+            sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+            // sidebar.add(btnTagihan); // Buka komentar jika TagihanView di-load di MainFrame
+        }
+        
+        if (role.equals("admin") || role.equals("dokter") || role.equals("resepsionis")) {
+            sidebar.add(btnKunjungan); // Resepsionis bisa melihat riwayat
+            sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
+
         sidebar.add(Box.createVerticalGlue());
         
-        // Version Info
-        JLabel versionLabel = new JLabel("v1.0.0 - Module");
-        versionLabel.setFont(new Font("Poppins", Font.ITALIC, 11));
-        versionLabel.setForeground(new Color(255, 255, 255, 150)); // Putih transparan
-        versionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sidebar.add(versionLabel);
+        // Logout Button
+        JButton btnLogout = createSidebarButton("Keluar", "");
+        btnLogout.setForeground(new Color(255, 200, 200));
+        btnLogout.addActionListener(e -> {
+            SessionManager.logout();
+            this.dispose();
+            new LoginView().setVisible(true); // Kembali ke halaman login
+        });
+        sidebar.add(btnLogout);
         
         add(sidebar, BorderLayout.WEST);
         
-        // --- CONTENT AREA (CARD LAYOUT) ---
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(COLOR_SURFACE);
         add(contentPanel, BorderLayout.CENTER);
+        
+        contentPanel.add(new DashboardView(), "DASHBOARD");
+        contentPanel.add(new PasienView(), "PASIEN");
+        contentPanel.add(new KunjunganView(), "KUNJUNGAN");
+        contentPanel.add(new AntrianView(), "ANTRIAN");
+        
+        add(contentPanel, BorderLayout.CENTER);
+        
+        if (btnDashboard != null) btnDashboard.addActionListener(e -> showView("DASHBOARD"));
+        if (btnPasien != null) btnPasien.addActionListener(e -> showView("PASIEN"));
+        if (btnKunjungan != null) btnKunjungan.addActionListener(e -> showView("KUNJUNGAN"));
+        if (btnAntrian != null) btnAntrian.addActionListener(e -> showView("ANTRIAN"));
+    }
+    
+    public void showView(String viewName) {
+        if (cardLayout != null && contentPanel != null) {
+            cardLayout.show(contentPanel, viewName);
+        }
     }
     
     private JButton createSidebarButton(String text, String cardName) {
