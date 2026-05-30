@@ -30,7 +30,10 @@ public class PasienController {
         view.addSimpanListener(e -> handleSimpan());
         view.addHapusListener(e -> handleHapus());
         view.addBatalListener(e -> handleBatal());
-        view.addCariListener(e -> handleCari());
+        
+        // Cari dan Sort dipusatkan di loadData
+        view.addCariListener(e -> loadData());
+        view.addSortListener(e -> loadData());
         
         view.addTableMouseListener(new MouseAdapter() {
             @Override
@@ -42,7 +45,8 @@ public class PasienController {
 
     public void loadData() {
         view.setStatusText("Memuat data pasien...");
-        
+        String keyword = view.getCariInput();
+        String sortOption = view.getSortOption();
         
         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override
@@ -50,21 +54,49 @@ public class PasienController {
                 List<Object[]> dataList = new ArrayList<>();
                 if (connection == null) return dataList;
 
-                String sql = "SELECT id, no_rm, nama, no_telp, tanggal_lahir, golongan_darah, alergi, alamat FROM pasien ORDER BY id DESC";
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
+                StringBuilder sql = new StringBuilder(
+                    "SELECT id, no_rm, nama, no_telp, tanggal_lahir, golongan_darah, alergi, alamat FROM pasien"
+                );
+                
+                List<String> conditions = new ArrayList<>();
+                List<Object> params = new ArrayList<>();
+
+                // Logika Pencarian
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    conditions.add("(nama LIKE ? OR no_rm LIKE ?)");
+                    params.add("%" + keyword.trim() + "%");
+                    params.add("%" + keyword.trim() + "%");
+                }
+
+                if (!conditions.isEmpty()) {
+                    sql.append(" WHERE ").append(String.join(" AND ", conditions));
+                }
+
+                // Logika Sorting
+                if ("Paling Lama".equals(sortOption)) {
+                    sql.append(" ORDER BY id ASC");
+                } else {
+                    sql.append(" ORDER BY id DESC"); // Paling Baru (Default)
+                }
+
+                try (PreparedStatement pstmt = connection.prepareStatement(sql.toString())) {
+                    for (int i = 0; i < params.size(); i++) {
+                        pstmt.setObject(i + 1, params.get(i));
+                    }
                     
-                    while (rs.next()) {
-                        dataList.add(new Object[]{
-                            rs.getInt("id"),
-                            rs.getString("no_rm"),
-                            rs.getString("nama"),
-                            rs.getString("no_telp"),
-                            rs.getDate("tanggal_lahir"),
-                            rs.getString("golongan_darah"),
-                            rs.getString("alergi"),
-                            rs.getString("alamat")
-                        });
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            dataList.add(new Object[]{
+                                rs.getInt("id"),
+                                rs.getString("no_rm"),
+                                rs.getString("nama"),
+                                rs.getString("no_telp"),
+                                rs.getDate("tanggal_lahir"),
+                                rs.getString("golongan_darah"),
+                                rs.getString("alergi"),
+                                rs.getString("alamat")
+                            });
+                        }
                     }
                 }
                 return dataList;
@@ -120,7 +152,6 @@ public class PasienController {
                                     maxNum = num;
                                 }
                             } catch (NumberFormatException e) {
-                                
                             }
                         }
                     }
@@ -155,7 +186,6 @@ public class PasienController {
         String golDarah = view.getGolonganDarahInput();
         String alergi = view.getAlergiInput();
 
-        
         if (nama.isEmpty() || noRM.isEmpty()) {
             JOptionPane.showMessageDialog(view, "Nama dan No. RM wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
             return;
@@ -174,14 +204,12 @@ public class PasienController {
         final Date finalTglLahir = tglLahir;
         view.setStatusText("Menyimpan data...");
 
-        
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
                 if (selectedPasienId == -1) {
-                    
                     String sql = "INSERT INTO pasien (nama, no_rm, alamat, no_telp, tanggal_lahir, golongan_darah, alergi) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setString(1, nama);
@@ -194,7 +222,6 @@ public class PasienController {
                         pstmt.executeUpdate();
                     }
                 } else {
-                    
                     String sql = "UPDATE pasien SET nama=?, no_rm=?, alamat=?, no_telp=?, tanggal_lahir=?, golongan_darah=?, alergi=? WHERE id=?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setString(1, nama);
@@ -254,7 +281,6 @@ public class PasienController {
                 
                 connection.setAutoCommit(false);
                 try {
-                    
                     String sqlDelDetResep = "DELETE FROM detail_resep WHERE id_resep IN (" +
                                             "  SELECT id FROM resep WHERE id_kunjungan IN (" +
                                             "    SELECT id FROM kunjungan WHERE id_pasien = ?" +
@@ -265,7 +291,6 @@ public class PasienController {
                         pstmt.executeUpdate();
                     }
                     
-                    
                     String sqlDelResep = "DELETE FROM resep WHERE id_kunjungan IN (" +
                                          "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
                                          ")";
@@ -273,7 +298,6 @@ public class PasienController {
                         pstmt.setInt(1, id);
                         pstmt.executeUpdate();
                     }
-                    
                     
                     String sqlDelTagihan = "DELETE FROM tagihan WHERE id_kunjungan IN (" +
                                            "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
@@ -283,13 +307,11 @@ public class PasienController {
                         pstmt.executeUpdate();
                     }
                     
-                    
                     String sqlDelKunjungan = "DELETE FROM kunjungan WHERE id_pasien = ?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sqlDelKunjungan)) {
                         pstmt.setInt(1, id);
                         pstmt.executeUpdate();
                     }
-                    
                     
                     String sqlDelAntrian = "DELETE FROM antrian WHERE id_pasien = ?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sqlDelAntrian)) {
@@ -297,7 +319,6 @@ public class PasienController {
                         pstmt.executeUpdate();
                     }
     
-                    
                     String sql = "DELETE FROM pasien WHERE id = ?";
                     try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                         pstmt.setInt(1, id);
@@ -341,62 +362,6 @@ public class PasienController {
         view.setFormEnabled(false);
         view.setButtonsState(false);
         view.setStatusText("Siap");
-    }
-
-    private void handleCari() {
-        String keyword = view.getCariInput();
-        if (keyword.isEmpty()) {
-            loadData();
-            return;
-        }
-
-        view.setStatusText("Mencari pasien '" + keyword + "'...");
-        SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<Object[]> doInBackground() throws Exception {
-                List<Object[]> dataList = new ArrayList<>();
-                if (connection == null) return dataList;
-
-                String sql = "SELECT id, no_rm, nama, no_telp, tanggal_lahir, golongan_darah, alergi, alamat " +
-                             "FROM pasien WHERE nama LIKE ? OR no_rm LIKE ? ORDER BY id DESC";
-                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                    pstmt.setString(1, "%" + keyword + "%");
-                    pstmt.setString(2, "%" + keyword + "%");
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        while (rs.next()) {
-                            dataList.add(new Object[]{
-                                rs.getInt("id"),
-                                rs.getString("no_rm"),
-                                rs.getString("nama"),
-                                rs.getString("no_telp"),
-                                rs.getDate("tanggal_lahir"),
-                                rs.getString("golongan_darah"),
-                                rs.getString("alergi"),
-                                rs.getString("alamat")
-                            });
-                        }
-                    }
-                }
-                return dataList;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    List<Object[]> dataList = get();
-                    DefaultTableModel model = view.getTableModel();
-                    model.setRowCount(0);
-                    for (Object[] row : dataList) {
-                        model.addRow(row);
-                    }
-                    view.setStatusText("Ditemukan " + dataList.size() + " pasien");
-                } catch (Exception e) {
-                    view.setStatusText("Gagal mencari data: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            }
-        };
-        worker.execute();
     }
 
     private void handleTableClick() {

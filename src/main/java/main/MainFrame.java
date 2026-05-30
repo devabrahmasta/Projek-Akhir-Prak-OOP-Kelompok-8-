@@ -20,30 +20,26 @@ public class MainFrame extends JFrame {
     private JPanel contentPanel;
     private CardLayout cardLayout;
     
-    
     private JButton btnDashboard;
     private JButton btnPasien;
     private JButton btnKunjungan;
     private JButton btnAntrian;
-    
     
     private DashboardView dashboardView;
     private PasienView pasienView;
     private KunjunganView kunjunganView;
     private AntrianView antrianView;
     
-    
     private DashboardController dashboardController;
     private PasienController pasienController;
     private KunjunganController kunjunganController;
     private AntrianController antrianController;
     
-    
-    private final Color COLOR_SIDEBAR = new Color(0x1F, 0x6F, 0x5F); 
-    private final Color COLOR_BG = new Color(0xEE, 0xEE, 0xEE); 
-    private final Color COLOR_PRIMARY = new Color(0x2F, 0xA0, 0x84); 
-    private final Color COLOR_TEXT = Color.WHITE;
-    private final Color COLOR_TEXT_MUTED = new Color(0x9E, 0xDF, 0xD4); 
+    // --- COLOR PALETTE MODERN ---
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // #37c2ae
+    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); // #2daf9b
+    private final Color COLOR_SURFACE = new Color(240, 246, 246); // #f0f6f6
+    private final Color COLOR_TEXT_DARK = new Color(51, 51, 51); // #333333
     
     public MainFrame() {
         setTitle("Sistem Manajemen Klinik - Medika Center");
@@ -54,9 +50,8 @@ public class MainFrame extends JFrame {
         initComponents();
         initMVC();
         
-        
+        // Mulai dari halaman Dashboard
         switchPanel("DASHBOARD");
-        
         
         addWindowListener(new WindowAdapter() {
             @Override
@@ -71,97 +66,114 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
         
-        
+        // --- SIDEBAR MODERN ---
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(240, 0));
-        sidebar.setBackground(COLOR_SIDEBAR);
-        sidebar.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, new Color(45, 45, 52)));
+        sidebar.setPreferredSize(new Dimension(250, 0));
+        sidebar.setBackground(COLOR_PRIMARY);
+        sidebar.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
         
+        // Logo & Brand (UPDATE SESUAI INSTRUKSI)
+        JPanel brandPanel = new JPanel();
+        brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.X_AXIS));
+        brandPanel.setOpaque(false);
+        brandPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 25));
-        brandPanel.setBackground(COLOR_SIDEBAR);
-        brandPanel.setMaximumSize(new Dimension(240, 80));
+        JLabel lblLogoImage = new JLabel();
+        try {
+            ImageIcon iconAsli = new ImageIcon(getClass().getResource("/assets/logo.png"));
+            Image gambar = iconAsli.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+            lblLogoImage.setIcon(new ImageIcon(gambar));
+        } catch (Exception e) {
+            System.err.println("Gagal memuat logo: " + e.getMessage());
+        }
         
-        JLabel logoLabel = new JLabel("✚ ");
-        logoLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        logoLabel.setForeground(COLOR_PRIMARY);
+        JLabel lblLogoText = new JLabel("Medika Center");
+        lblLogoText.setFont(new Font("Poppins", Font.BOLD, 20));
+        lblLogoText.setForeground(Color.WHITE);
         
-        JLabel brandName = new JLabel("Medika Center");
-        brandName.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        brandName.setForeground(COLOR_TEXT);
+        brandPanel.add(lblLogoImage);
+        brandPanel.add(Box.createRigidArea(new Dimension(15, 0))); // Jarak antara logo dan teks
+        brandPanel.add(lblLogoText);
         
-        brandPanel.add(logoLabel);
-        brandPanel.add(brandName);
         sidebar.add(brandPanel);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 40)));
         
-        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
-        
-        
+        // Menu Buttons
         btnDashboard = createSidebarButton("Dashboard", "DASHBOARD");
         btnPasien = createSidebarButton("Data Pasien", "PASIEN");
-        btnKunjungan = createSidebarButton("Catatan Kunjungan", "KUNJUNGAN");
-        btnAntrian = createSidebarButton("Antrian Klinik", "ANTRIAN");
+        btnKunjungan = createSidebarButton("Kunjungan", "KUNJUNGAN");
+        btnAntrian = createSidebarButton("Antrian", "ANTRIAN");
         
         sidebar.add(btnDashboard);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnPasien);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnKunjungan);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnAntrian);
         
-        
         sidebar.add(Box.createVerticalGlue());
-        JLabel versionLabel = new JLabel("v1.0.0 - Person A Module");
-        versionLabel.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        versionLabel.setForeground(COLOR_TEXT_MUTED);
-        versionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        versionLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
+        
+        // Version Info
+        JLabel versionLabel = new JLabel("v1.0.0 - Module");
+        versionLabel.setFont(new Font("Poppins", Font.ITALIC, 11));
+        versionLabel.setForeground(new Color(255, 255, 255, 150)); // Putih transparan
+        versionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         sidebar.add(versionLabel);
         
         add(sidebar, BorderLayout.WEST);
         
-        
+        // --- CONTENT AREA (CARD LAYOUT) ---
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-        contentPanel.setBackground(COLOR_BG);
+        contentPanel.setBackground(COLOR_SURFACE);
         add(contentPanel, BorderLayout.CENTER);
     }
     
     private JButton createSidebarButton(String text, String cardName) {
         JButton btn = new JButton(text);
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btn.setForeground(COLOR_TEXT_MUTED);
-        btn.setBackground(COLOR_SIDEBAR);
+        btn.setFont(new Font("Poppins", Font.BOLD, 14));
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         btn.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
-        btn.setMaximumSize(new Dimension(220, 45));
-        btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setOpaque(true);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        
+        // Matikan default styling Swing
+        btn.setContentAreaFilled(false);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        
+        // Custom Rounded UI
+        btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(c.getBackground());
+                g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 15, 15);
+                super.paint(g2, c);
+                g2.dispose();
+            }
+        });
         
         btn.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
-                if (btn.getForeground() != COLOR_TEXT) { 
-                    btn.setBackground(new Color(0x14, 0x48, 0x3E)); 
-                    btn.setForeground(COLOR_TEXT);
-                }
-            }
-            
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (btn.getForeground() != COLOR_TEXT || btn.getBackground() != COLOR_PRIMARY) { 
-                    btn.setBackground(COLOR_SIDEBAR);
-                    btn.setForeground(COLOR_TEXT_MUTED);
-                }
-            }
-            
-            @Override
             public void mousePressed(MouseEvent e) {
                 switchPanel(cardName);
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (btn.getBackground().equals(COLOR_PRIMARY)) {
+                    btn.setBackground(COLOR_PRIMARY_HOVER);
+                }
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (btn.getBackground().equals(COLOR_PRIMARY_HOVER)) {
+                    btn.setBackground(COLOR_PRIMARY);
+                }
             }
         });
         
@@ -169,19 +181,19 @@ public class MainFrame extends JFrame {
     }
     
     private void initMVC() {
-        
+        // Inisialisasi View
         dashboardView = new DashboardView();
         pasienView = new PasienView();
         kunjunganView = new KunjunganView();
         antrianView = new AntrianView();
         
-        
+        // Daftarkan View ke CardLayout
         contentPanel.add(dashboardView, "DASHBOARD");
         contentPanel.add(pasienView, "PASIEN");
         contentPanel.add(kunjunganView, "KUNJUNGAN");
         contentPanel.add(antrianView, "ANTRIAN");
         
-        
+        // Inisialisasi Controller
         dashboardController = new DashboardController(dashboardView);
         pasienController = new PasienController(pasienView);
         kunjunganController = new KunjunganController(kunjunganView);
@@ -191,9 +203,14 @@ public class MainFrame extends JFrame {
     private void switchPanel(String cardName) {
         cardLayout.show(contentPanel, cardName);
         
+        // Reset warna semua tombol ke default
+        JButton[] buttons = {btnDashboard, btnPasien, btnKunjungan, btnAntrian};
+        for (JButton btn : buttons) {
+            btn.setBackground(COLOR_PRIMARY);
+            btn.setForeground(Color.WHITE);
+        }
         
-        resetSidebarButtons();
-        
+        // Beri warna khusus pada tombol yang aktif (Background Putih, Teks Tosca)
         if ("DASHBOARD".equals(cardName)) {
             styleActiveButton(btnDashboard);
             if (dashboardController != null) dashboardController.loadData();
@@ -215,21 +232,8 @@ public class MainFrame extends JFrame {
         }
     }
     
-    private void resetSidebarButtons() {
-        JButton[] buttons = {btnDashboard, btnPasien, btnKunjungan, btnAntrian};
-        for (JButton btn : buttons) {
-            btn.setBackground(COLOR_SIDEBAR);
-            btn.setForeground(COLOR_TEXT_MUTED);
-            btn.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
-        }
-    }
-    
     private void styleActiveButton(JButton btn) {
-        btn.setBackground(COLOR_PRIMARY);
-        btn.setForeground(COLOR_TEXT);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createEmptyBorder(12, 20, 12, 20),
-            BorderFactory.createMatteBorder(0, 4, 0, 0, Color.WHITE)
-        ));
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(COLOR_PRIMARY);
     }
 }
