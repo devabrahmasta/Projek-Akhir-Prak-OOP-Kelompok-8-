@@ -3,6 +3,7 @@ package controller;
 import database.DBConnection;
 import view.ComboItem;
 import view.ObatView;
+import model.Obat;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -39,6 +40,38 @@ public class ObatController {
                 handleTableClick();
             }
         });
+    }
+    
+    public List<Obat> getSemuaObat() {
+        List<Obat> listObat = new ArrayList<>();
+        if (connection == null) return listObat;
+
+        // Query cukup mengambil kolom yang dibutuhkan oleh StokMonitorThread
+        String sql = "SELECT kode_obat, nama, stok FROM obat";
+        
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                // Pastikan class model.Obat Anda memiliki default constructor 
+                // dan setter/getter untuk Nama dan Stok.
+                Obat obat = new Obat(
+                        rs.getInt("id"),
+                    rs.getString("nama"),
+                    rs.getInt("stok"),
+                    rs.getDouble("harga")
+                );
+                // Jika DB menggunakan "kode_obat" alih-alih "id"
+                // obat.setId(rs.getString("kode_obat")); 
+                obat.setNama(rs.getString("nama"));
+                obat.setStok(rs.getInt("stok"));
+                
+                listObat.add(obat);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getSemuaObat: " + e.getMessage());
+        }
+        
+        return listObat;
     }
 
     // =============================================

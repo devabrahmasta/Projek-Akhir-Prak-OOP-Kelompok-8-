@@ -1,5 +1,6 @@
 package view;
 
+import controller.SessionManager;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -7,8 +8,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class DokterView extends JPanel {
     private JTable table;
@@ -197,6 +196,14 @@ public class DokterView extends JPanel {
         // Inisialisasi State Awal
         btnUbah.setEnabled(false);
         btnHapus.setEnabled(false);
+        
+        if (SessionManager.isLoggedIn() && SessionManager.hasRole("resepsionis")) {
+            btnTambah.setVisible(false);
+            btnUbah.setVisible(false);
+            btnHapus.setVisible(false);
+            txtNama.setEditable(false);
+            txtSpesialisasi.setEditable(false);
+        }
     }
     
     // --- HELPER METODE UI MODERN ---

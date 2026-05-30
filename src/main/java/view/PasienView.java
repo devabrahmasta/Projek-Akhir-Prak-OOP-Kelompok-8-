@@ -22,6 +22,7 @@ public class PasienView extends JPanel {
     private JTextField txtTanggalLahir; 
     private JComboBox<String> cbGolDarah;
     private JTextField txtAlergi;
+    private JButton btnDaftarAntrian;
     
     private JTextField txtCari;
     private JButton btnCari;
@@ -242,6 +243,10 @@ public class PasienView extends JPanel {
         cbSortWaktu.setPreferredSize(new Dimension(140, 30));
         sortPanel.add(cbSortWaktu);
         
+        btnDaftarAntrian = new JButton("+ Daftar Antrian");
+        styleRoundedButton(btnDaftarAntrian, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
+        sortPanel.add(btnDaftarAntrian);
+        
         topTablePanel.add(sortPanel, BorderLayout.EAST);
         tableWrapper.add(topTablePanel, BorderLayout.NORTH);
         
@@ -433,6 +438,7 @@ public class PasienView extends JPanel {
     public void addCariListener(ActionListener l) { btnCari.addActionListener(l); }
     public void addTableMouseListener(MouseAdapter l) { table.addMouseListener(l); }
     
+    
     public String getNoRMInput() { return txtNoRM.getText().trim(); }
     public String getNamaInput() { return txtNama.getText().trim(); }
     public String getAlamatInput() { return txtAlamat.getText().trim(); }
@@ -442,6 +448,7 @@ public class PasienView extends JPanel {
         String val = (String) cbGolDarah.getSelectedItem();
         return "-".equals(val) ? "" : val;
     }
+    
     public String getAlergiInput() { return txtAlergi.getText().trim(); }
     
     public String getCariInput() { return txtCari.getText().trim(); }
@@ -454,6 +461,7 @@ public class PasienView extends JPanel {
     
     public DefaultTableModel getTableModel() { return tableModel; }
     public JTable getTable() { return table; }
+    public JButton getBtnDaftarAntrian() { return btnDaftarAntrian; }
     
     public int getSelectedId() {
         int row = table.getSelectedRow();

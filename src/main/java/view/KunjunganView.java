@@ -1,7 +1,7 @@
 package view;
 
+import controller.SessionManager;
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -349,6 +349,19 @@ public class KunjunganView extends JPanel {
         
         setFormEnabled(false);
         setButtonsState(false);
+        
+        if (SessionManager.isLoggedIn() && SessionManager.hasRole("resepsionis")) {
+            btnTambah.setVisible(false);
+            btnSimpan.setVisible(false);
+            btnHapus.setVisible(false);
+            btnBatal.setVisible(false);
+            cbPasien.setEnabled(false);
+            cbDokter.setEnabled(false);
+            txtTanggal.setEditable(false);
+            txtKeluhan.setEditable(false);
+            txtDiagnosa.setEditable(false);
+            lblStatus.setText("Mode Read-Only (Resepsionis)");
+        }
     }
     
     // --- HELPER METODE UI MODERN ---
