@@ -98,7 +98,6 @@ public class LoginController {
                             });
                         } else {
                             view.showError("Login dibatalkan oleh pengguna.");
-                            view.clearPassword();
                         }
                         
                     } else {
