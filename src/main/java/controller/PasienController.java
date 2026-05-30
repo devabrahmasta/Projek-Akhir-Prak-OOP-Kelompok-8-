@@ -1,6 +1,10 @@
 package controller;
 
 import database.DBConnection;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import view.PasienView;
 
 import javax.swing.*;
@@ -34,6 +38,7 @@ public class PasienController {
         // Cari dan Sort dipusatkan di loadData
         view.addCariListener(e -> loadData());
         view.addSortListener(e -> loadData());
+        view.getBtnDaftarAntrian().addActionListener(e -> tampilkanDialogAntrian());
         
         view.addTableMouseListener(new MouseAdapter() {
             @Override
@@ -41,6 +46,78 @@ public class PasienController {
                 handleTableClick();
             }
         });
+    }
+    
+    private void tampilkanDialogAntrian() {
+        int idPasien = view.getSelectedId();
+        if (idPasien == -1) {
+            JOptionPane.showMessageDialog(view, "Pilih pasien dari tabel terlebih dahulu!", "Validasi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(view), "Daftarkan Antrian", true);
+        dialog.setSize(400, 250);
+        dialog.setLayout(new GridBagLayout());
+        dialog.setLocationRelativeTo(view);
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(new JLabel("Pilih Dokter / Poli:"), gbc);
+
+        gbc.gridx = 1;
+        JComboBox<view.ComboItem> cbDokter = new JComboBox<>();
+        dialog.add(cbDokter, gbc);
+
+        // Load dokter aktif
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, nama, spesialisasi FROM dokter")) {
+            while (rs.next()) {
+                cbDokter.addItem(new view.ComboItem(rs.getInt("id"), rs.getString("nama") + " (" + rs.getString("spesialisasi") + ")"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
+        JButton btnSimpan = new JButton("Simpan Antrian");
+        btnSimpan.setBackground(new Color(55, 194, 174));
+        btnSimpan.setForeground(Color.WHITE);
+        dialog.add(btnSimpan, gbc);
+
+        btnSimpan.addActionListener(e -> {
+            view.ComboItem dokterDipilih = (view.ComboItem) cbDokter.getSelectedItem();
+            if (dokterDipilih == null) return;
+
+            try {
+                // Generate Nomor Antrian
+                String sqlMax = "SELECT MAX(nomor_antrian) FROM antrian WHERE tanggal = CURRENT_DATE";
+                int noUrut = 1;
+                try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sqlMax)) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        noUrut = rs.getInt(1) + 1;
+                    }
+                }
+
+                String sqlInsert = "INSERT INTO antrian (id_pasien, id_dokter, tanggal, nomor_antrian, status) VALUES (?, ?, CURRENT_DATE, ?, 'Menunggu')";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlInsert)) {
+                    pstmt.setInt(1, idPasien);
+                    pstmt.setInt(2, dokterDipilih.getId());
+                    pstmt.setInt(3, noUrut);
+                    pstmt.executeUpdate();
+                }
+
+                JOptionPane.showMessageDialog(dialog, "Berhasil masuk antrian! Nomor Urut: " + noUrut);
+                dialog.dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Gagal menyimpan antrian: " + ex.getMessage());
+            }
+        });
+
+        dialog.setVisible(true);
     }
 
     public void loadData() {

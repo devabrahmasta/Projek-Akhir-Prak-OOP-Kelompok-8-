@@ -2,12 +2,11 @@ package controller;
 
 import database.DBConnection;
 import model.*;
+import view.ComboItem;
 import view.TagihanView;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,404 +15,169 @@ public class TagihanController {
     private final TagihanView view;
     private final Connection connection;
 
+    private double currentTarifDokter = 0;
+    private double currentTarifObat = 0;
+    private double currentTotalAwal = 0;
+    private double currentTotalAkhir = 0;
+
     public TagihanController(TagihanView view) {
         this.view = view;
         this.connection = DBConnection.getInstance().getConnection();
         
         initController();
-        loadData();
+        loadKunjunganPending();
+        loadRiwayatTagihan();
     }
 
     private void initController() {
-        view.getBtnRefresh().addActionListener(e -> loadData());
-        view.getBtnTambah().addActionListener(e -> tambahData());
-        view.getBtnUbah().addActionListener(e -> ubahData());
-        view.getBtnHapus().addActionListener(e -> hapusData());
-        
-        view.getTable().addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                handleTableClick();
-            }
+        view.addKunjunganSelectListener(e -> hitungSubtotal());
+        view.addJenisPembayaranSelectListener(e -> hitungDiskonPembayaran());
+        view.addBuatTagihanListener(e -> hitungSubtotal());
+        view.addProsesBayarListener(e -> prosesPembayaran());
+        view.addBatalListener(e -> {
+            view.getCbKunjungan().setSelectedIndex(-1);
+            resetForm();
         });
     }
 
-    private void loadData() {
-        SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
-            @Override
-            protected List<Object[]> doInBackground() throws Exception {
-                List<Object[]> dataList = new ArrayList<>();
-                if (connection == null) return dataList;
+    private void loadKunjunganPending() {
+        view.getCbKunjungan().removeAllItems();
+        // Ambil kunjungan yang belum memiliki tagihan
+        String sql = "SELECT k.id, p.nama AS nama_pasien, d.nama AS nama_dokter, k.tanggal_kunjungan " +
+                     "FROM kunjungan k " +
+                     "JOIN pasien p ON k.id_pasien = p.id " +
+                     "JOIN dokter d ON k.id_dokter = d.id " +
+                     "LEFT JOIN tagihan t ON k.id = t.id_kunjungan " +
+                     "WHERE t.id IS NULL";
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String label = "KJ-" + rs.getInt("id") + " : " + rs.getString("nama_pasien");
+                view.getCbKunjungan().addItem(new ComboItem(rs.getInt("id"), label));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-                String sql = "SELECT id, id_kunjungan, total_biaya, tanggal_pembayaran, jenis_pembayaran, status_pembayaran FROM tagihan ORDER BY id DESC";
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
+    private void hitungSubtotal() {
+        ComboItem terpilih = (ComboItem) view.getCbKunjungan().getSelectedItem();
+        if (terpilih == null) {
+            resetForm();
+            return;
+        }
+
+        int idKunjungan = terpilih.getId();
+        currentTarifDokter = 0;
+        currentTarifObat = 0;
+        
+        try {
+            // 1. Dapatkan detail Pasien & Dokter
+            String sqlKunjungan = "SELECT p.nama AS nama_pasien, d.id AS doc_id, d.nama AS doc_nama, d.spesialisasi, k.tanggal_kunjungan " +
+                                  "FROM kunjungan k JOIN pasien p ON k.id_pasien = p.id JOIN dokter d ON k.id_dokter = d.id " +
+                                  "WHERE k.id = ?";
+            try (PreparedStatement pst = connection.prepareStatement(sqlKunjungan)) {
+                pst.setInt(1, idKunjungan);
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        view.setAutoFillData(rs.getString("nama_pasien"), rs.getString("doc_nama"), rs.getString("tanggal_kunjungan"));
+                        
+                        // Kalkulasi Polimorfisme Dokter
+                        String spec = rs.getString("spesialisasi");
+                        Dokter dokter = spec.equalsIgnoreCase("Umum") ? 
+                                        new DokterUmum(rs.getInt("doc_id"), rs.getString("doc_nama")) : 
+                                        new DokterSpesialis(rs.getInt("doc_id"), rs.getString("doc_nama"), spec);
+                        currentTarifDokter = dokter.hitungTarifKonsultasi();
+                    }
+                }
+            }
+
+            // 2. Dapatkan total Obat
+            String sqlObat = "SELECT dr.jumlah, o.harga FROM detail_resep dr " +
+                             "JOIN resep r ON dr.id_resep = r.id JOIN obat o ON dr.id_obat = o.id " +
+                             "WHERE r.id_kunjungan = ?";
+            try (PreparedStatement pst = connection.prepareStatement(sqlObat)) {
+                pst.setInt(1, idKunjungan);
+                try (ResultSet rs = pst.executeQuery()) {
                     while (rs.next()) {
-                        dataList.add(new Object[]{
-                            rs.getInt("id"),
-                            rs.getInt("id_kunjungan"),
-                            rs.getDouble("total_biaya"),
-                            rs.getTimestamp("tanggal_pembayaran") != null ? rs.getTimestamp("tanggal_pembayaran").toString() : "",
-                            rs.getString("jenis_pembayaran"),
-                            rs.getString("status_pembayaran")
-                        });
+                        currentTarifObat += (rs.getInt("jumlah") * rs.getDouble("harga"));
                     }
                 }
-                return dataList;
             }
 
-            @Override
-            protected void done() {
-                try {
-                    List<Object[]> dataList = get();
-                    String[] columnNames = {"ID", "Kunjungan ID", "Total Biaya", "Tanggal", "Jenis Pembayaran", "Status"};
-                    DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
-                        @Override
-                        public boolean isCellEditable(int row, int column) {
-                            return false;
-                        }
-                    };
-                    for (Object[] row : dataList) {
-                        model.addRow(row);
-                    }
-                    view.getTable().setModel(model);
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(view, "Gagal memuat data: " + e.getMessage());
-                }
-            }
-        };
-        worker.execute();
-    }
+            currentTotalAwal = currentTarifDokter + currentTarifObat;
+            hitungDiskonPembayaran();
 
-    private void tambahData() {
-        String kunjunganIdStr = view.getTxtKunjunganId().getText().trim();
-        String totalBiayaStr = view.getTxtTotalBiaya().getText().trim();
-        String tanggalStr = view.getTxtTanggal().getText().trim();
-        String jenisPembayaran = view.getTxtJenisPembayaran().getText().trim();
-
-        if (kunjunganIdStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Kunjungan ID, Tanggal, dan Jenis Pembayaran wajib diisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int kunjunganId;
-        try {
-            kunjunganId = Integer.parseInt(kunjunganIdStr);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(view, "Kunjungan ID harus berupa angka!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        SwingWorker<Boolean, Exception> worker = new SwingWorker<>() {
-            private String pesanKalkulasi = "";
-
-            @Override
-            protected Boolean doInBackground() throws Exception {
-                if (connection == null) throw new Exception("Tidak ada koneksi database");
-
-                Timestamp tanggal;
-                try {
-                    String formattedTanggalStr = tanggalStr;
-                    if (formattedTanggalStr.length() == 10) {
-                        formattedTanggalStr += " 00:00:00";
-                    }
-                    tanggal = Timestamp.valueOf(formattedTanggalStr);
-                } catch (IllegalArgumentException ex) {
-                    throw new Exception("Format Waktu salah! Gunakan YYYY-MM-DD");
-                }
-
-                double totalAwal = 0;
-
-                if (totalBiayaStr.isEmpty()) {
-                    double tarifDokter = 0;
-                    double totalObat = 0;
-                    String docNama = "";
-                    String docSpec = "";
-                    String role = "";
-
-                    // Query Dokter
-                    String sqlDokter = "SELECT d.id, d.nama, d.spesialisasi FROM kunjungan k JOIN dokter d ON k.id_dokter = d.id WHERE k.id = ?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDokter)) {
-                        pstmt.setInt(1, kunjunganId);
-                        try (ResultSet rs = pstmt.executeQuery()) {
-                            if (rs.next()) {
-                                int docId = rs.getInt("id");
-                                docNama = rs.getString("nama");
-                                docSpec = rs.getString("spesialisasi");
-                                Dokter dokter;
-                                if (docSpec.equalsIgnoreCase("Umum")) {
-                                    dokter = new DokterUmum(docId, docNama);
-                                } else {
-                                    dokter = new DokterSpesialis(docId, docNama, docSpec);
-                                }
-                                tarifDokter = dokter.hitungTarifKonsultasi();
-                                role = dokter.getRole();
-                            } else {
-                                throw new Exception("Kunjungan ID tidak valid atau Dokter tidak ditemukan.");
-                            }
-                        }
-                    }
-
-                    // Query Obat dari Resep
-                    String sqlObat = "SELECT dr.jumlah, o.harga FROM detail_resep dr " +
-                                     "JOIN resep r ON dr.id_resep = r.id " +
-                                     "JOIN obat o ON dr.id_obat = o.id " +
-                                     "WHERE r.id_kunjungan = ?";
-                    try (PreparedStatement pstmtObat = connection.prepareStatement(sqlObat)) {
-                        pstmtObat.setInt(1, kunjunganId);
-                        try (ResultSet rsObat = pstmtObat.executeQuery()) {
-                            while (rsObat.next()) {
-                                totalObat += (rsObat.getInt("jumlah") * rsObat.getDouble("harga"));
-                            }
-                        }
-                    }
-
-                    totalAwal = tarifDokter + totalObat;
-                    pesanKalkulasi = String.format("Rincian Otomatis:\nTarif %s %s: Rp %,.2f\nBiaya Obat: Rp %,.2f\nTotal Awal: Rp %,.2f", 
-                                                    role, docSpec, tarifDokter, totalObat, totalAwal);
-                } else {
-                    try {
-                        totalAwal = Double.parseDouble(totalBiayaStr);
-                    } catch (NumberFormatException ex) {
-                        throw new Exception("Total Biaya harus berupa angka desimal!");
-                    }
-                }
-
-                Pembayaran pembayaran;
-                if (jenisPembayaran.equalsIgnoreCase("Tunai")) {
-                    pembayaran = new PembayaranTunai(totalAwal, totalAwal * 0.05); 
-                } else if (jenisPembayaran.equalsIgnoreCase("BPJS")) {
-                    pembayaran = new PembayaranBPJS(totalAwal, 120000.0); 
-                } else if (jenisPembayaran.equalsIgnoreCase("Asuransi")) {
-                    pembayaran = new PembayaranAsuransi(totalAwal, 80.0); 
-                } else {
-                    throw new Exception("Jenis pembayaran tidak dikenali! Gunakan: Tunai, BPJS, atau Asuransi.");
-                }
-
-                double totalBiayaAkhir = pembayaran.hitungTotal();
-                if (!pesanKalkulasi.isEmpty()) {
-                    pesanKalkulasi += String.format("\n\nMetode %s diterapkan.\nTotal Akhir (Setelah Potongan/Subsidi): Rp %,.2f", pembayaran.getJenisPembayaran(), totalBiayaAkhir);
-                }
-
-                
-                String sql = "INSERT INTO tagihan (id_kunjungan, total_biaya, tanggal_pembayaran, jenis_pembayaran, status_pembayaran) VALUES (?, ?, ?, ?, ?)";
-                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                    pstmt.setInt(1, kunjunganId);
-                    pstmt.setDouble(2, totalBiayaAkhir);
-                    pstmt.setTimestamp(3, tanggal);
-                    pstmt.setString(4, pembayaran.getJenisPembayaran());
-                    pstmt.setString(5, "Lunas");
-                    pstmt.executeUpdate();
-                }
-
-                return true;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    if (get()) {
-                        if (!pesanKalkulasi.isEmpty()) {
-                            JOptionPane.showMessageDialog(view, pesanKalkulasi, "Kalkulasi Tagihan", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                        JOptionPane.showMessageDialog(view, "Data Tagihan berhasil ditambahkan!");
-                        clearForm();
-                        loadData();
-                    }
-                } catch (Exception e) {
-                    String msg = e.getMessage();
-                    if (e.getCause() != null) msg = e.getCause().getMessage();
-                    JOptionPane.showMessageDialog(view, msg, "Error Validasi/Sistem", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
-    }
-
-    private void ubahData() {
-        String idStr = view.getTxtId().getText().trim();
-        String kunjunganIdStr = view.getTxtKunjunganId().getText().trim();
-        String totalBiayaStr = view.getTxtTotalBiaya().getText().trim();
-        String tanggalStr = view.getTxtTanggal().getText().trim();
-        String jenisPembayaran = view.getTxtJenisPembayaran().getText().trim();
-
-        if (idStr.isEmpty() || kunjunganIdStr.isEmpty() || tanggalStr.isEmpty() || jenisPembayaran.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Pilih data dari tabel dan pastikan form utama terisi!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int tagihanId, kunjunganId;
-        try {
-            tagihanId = Integer.parseInt(idStr);
-            kunjunganId = Integer.parseInt(kunjunganIdStr);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(view, "ID Tagihan dan Kunjungan ID harus berupa angka!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        SwingWorker<Boolean, Exception> worker = new SwingWorker<>() {
-            @Override
-            protected Boolean doInBackground() throws Exception {
-                if (connection == null) throw new Exception("Tidak ada koneksi database");
-
-                Timestamp tanggal;
-                try {
-                    String formattedTanggalStr = tanggalStr;
-                    if (formattedTanggalStr.length() == 10) {
-                        formattedTanggalStr += " 00:00:00";
-                    }
-                    tanggal = Timestamp.valueOf(formattedTanggalStr);
-                } catch (IllegalArgumentException ex) {
-                    throw new Exception("Format Waktu salah! Gunakan YYYY-MM-DD");
-                }
-
-                double totalAwal = 0;
-
-                if (totalBiayaStr.isEmpty()) {
-                    double tarifDokter = 0;
-                    double totalObat = 0;
-
-                    String sqlDokter = "SELECT d.id, d.nama, d.spesialisasi FROM kunjungan k JOIN dokter d ON k.id_dokter = d.id WHERE k.id = ?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDokter)) {
-                        pstmt.setInt(1, kunjunganId);
-                        try (ResultSet rs = pstmt.executeQuery()) {
-                            if (rs.next()) {
-                                int docId = rs.getInt("id");
-                                String docSpec = rs.getString("spesialisasi");
-                                Dokter dokter = docSpec.equalsIgnoreCase("Umum") ? 
-                                                new DokterUmum(docId, rs.getString("nama")) : 
-                                                new DokterSpesialis(docId, rs.getString("nama"), docSpec);
-                                tarifDokter = dokter.hitungTarifKonsultasi();
-                            } else {
-                                throw new Exception("Kunjungan ID tidak valid.");
-                            }
-                        }
-                    }
-
-                    String sqlObat = "SELECT dr.jumlah, o.harga FROM detail_resep dr JOIN resep r ON dr.id_resep = r.id JOIN obat o ON dr.id_obat = o.id WHERE r.id_kunjungan = ?";
-                    try (PreparedStatement pstmtObat = connection.prepareStatement(sqlObat)) {
-                        pstmtObat.setInt(1, kunjunganId);
-                        try (ResultSet rsObat = pstmtObat.executeQuery()) {
-                            while (rsObat.next()) {
-                                totalObat += (rsObat.getInt("jumlah") * rsObat.getDouble("harga"));
-                            }
-                        }
-                    }
-                    totalAwal = tarifDokter + totalObat;
-                } else {
-                    try {
-                        totalAwal = Double.parseDouble(totalBiayaStr);
-                    } catch (NumberFormatException ex) {
-                        throw new Exception("Total Biaya harus berupa angka desimal!");
-                    }
-                }
-
-                Pembayaran pembayaran;
-                if (jenisPembayaran.equalsIgnoreCase("Tunai")) {
-                    pembayaran = new PembayaranTunai(totalAwal, totalAwal * 0.05);
-                } else if (jenisPembayaran.equalsIgnoreCase("BPJS")) {
-                    pembayaran = new PembayaranBPJS(totalAwal, 120000.0);
-                } else if (jenisPembayaran.equalsIgnoreCase("Asuransi")) {
-                    pembayaran = new PembayaranAsuransi(totalAwal, 80.0);
-                } else {
-                    throw new Exception("Jenis pembayaran tidak dikenali! Gunakan: Tunai, BPJS, atau Asuransi.");
-                }
-
-                double totalBiayaAkhir = pembayaran.hitungTotal();
-
-                String sql = "UPDATE tagihan SET id_kunjungan=?, total_biaya=?, tanggal_pembayaran=?, jenis_pembayaran=? WHERE id=?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                    pstmt.setInt(1, kunjunganId);
-                    pstmt.setDouble(2, totalBiayaAkhir);
-                    pstmt.setTimestamp(3, tanggal);
-                    pstmt.setString(4, pembayaran.getJenisPembayaran());
-                    pstmt.setInt(5, tagihanId);
-                    pstmt.executeUpdate();
-                }
-
-                return true;
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    if (get()) {
-                        JOptionPane.showMessageDialog(view, "Data Tagihan berhasil diubah!");
-                        clearForm();
-                        loadData();
-                    }
-                } catch (Exception e) {
-                    String msg = e.getMessage();
-                    if (e.getCause() != null) msg = e.getCause().getMessage();
-                    JOptionPane.showMessageDialog(view, msg, "Error Validasi/Sistem", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
-    }
-
-    private void hapusData() {
-        String idStr = view.getTxtId().getText().trim();
-        if (idStr.isEmpty()) {
-            JOptionPane.showMessageDialog(view, "Pilih data yang ingin dihapus dari tabel!", "Validasi Gagal", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(view, "Hapus data tagihan ini?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        try {
-            int id = Integer.parseInt(idStr);
-            SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
-                @Override
-                protected Boolean doInBackground() throws Exception {
-                    if (connection == null) return false;
-
-                    String sql = "DELETE FROM tagihan WHERE id=?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    return true;
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        if (get()) {
-                            JOptionPane.showMessageDialog(view, "Data Tagihan berhasil dihapus!");
-                            clearForm();
-                            loadData();
-                        }
-                    } catch (Exception e) {
-                        JOptionPane.showMessageDialog(view, "Gagal menghapus data: " + e.getMessage());
-                    }
-                }
-            };
-            worker.execute();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(view, "ID Tagihan tidak valid!");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    private void handleTableClick() {
-        int row = view.getTable().getSelectedRow();
-        if (row != -1) {
-            view.getTxtId().setText(view.getTable().getValueAt(row, 0).toString());
-            view.getTxtKunjunganId().setText(view.getTable().getValueAt(row, 1).toString());
-            view.getTxtTotalBiaya().setText(view.getTable().getValueAt(row, 2).toString());
-            view.getTxtTanggal().setText(view.getTable().getValueAt(row, 3).toString());
-            view.getTxtJenisPembayaran().setText(view.getTable().getValueAt(row, 4).toString());
+    private void hitungDiskonPembayaran() {
+        if (currentTotalAwal == 0) return;
+
+        String jenis = (String) view.getCbJenisPembayaran().getSelectedItem();
+        Pembayaran bayar;
+
+        // Aturan sesuai implementasi OOP model
+        if (jenis.equalsIgnoreCase("BPJS")) {
+            bayar = new PembayaranBPJS(currentTotalAwal, currentTarifObat); // Contoh asumsi diskon BPJS/subsidi
+        } else if (jenis.equalsIgnoreCase("Asuransi Swasta")) {
+            bayar = new PembayaranAsuransi(currentTotalAwal, 80.0);
+        } else {
+            bayar = new PembayaranTunai(currentTotalAwal, 0); 
+        }
+
+        currentTotalAkhir = bayar.hitungTotal();
+        view.setSubtotals(currentTarifDokter, currentTarifObat, currentTotalAkhir);
+    }
+
+    private void prosesPembayaran() {
+        ComboItem terpilih = (ComboItem) view.getCbKunjungan().getSelectedItem();
+        if (terpilih == null || currentTotalAkhir == 0) {
+            JOptionPane.showMessageDialog(view, "Pilih kunjungan dan hitung tagihan terlebih dahulu!");
+            return;
+        }
+
+        String jenis = (String) view.getCbJenisPembayaran().getSelectedItem();
+        String sql = "INSERT INTO tagihan (id_kunjungan, total_biaya, tanggal_pembayaran, jenis_pembayaran, status_pembayaran) VALUES (?, ?, CURRENT_TIMESTAMP, ?, 'Lunas')";
+        
+        try (PreparedStatement pst = connection.prepareStatement(sql)) {
+            pst.setInt(1, terpilih.getId());
+            pst.setDouble(2, currentTotalAkhir);
+            pst.setString(3, jenis);
+            pst.executeUpdate();
+            
+            JOptionPane.showMessageDialog(view, "Pembayaran Lunas!\nTotal: Rp " + String.format("%,.2f", currentTotalAkhir));
+            resetForm();
+            loadKunjunganPending();
+            loadRiwayatTagihan();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(view, "Gagal memproses pembayaran: " + e.getMessage());
         }
     }
 
-    private void clearForm() {
-        view.getTxtId().setText("");
-        view.getTxtKunjunganId().setText("");
-        view.getTxtTotalBiaya().setText("");
-        view.getTxtTanggal().setText("");
-        view.getTxtJenisPembayaran().setText("");
+    private void loadRiwayatTagihan() {
+        String sql = "SELECT t.id, p.nama AS pasien, d.nama AS dokter, t.total_biaya, t.jenis_pembayaran, t.status_pembayaran " +
+                     "FROM tagihan t JOIN kunjungan k ON t.id_kunjungan = k.id " +
+                     "JOIN pasien p ON k.id_pasien = p.id JOIN dokter d ON k.id_dokter = d.id ORDER BY t.id DESC";
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+            DefaultTableModel model = view.getTableModel();
+            model.setRowCount(0);
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    "INV-" + rs.getInt("id"), rs.getString("pasien"), rs.getString("dokter"),
+                    String.format("Rp %,.2f", rs.getDouble("total_biaya")), rs.getString("jenis_pembayaran"), rs.getString("status_pembayaran")
+                });
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void resetForm() {
+        view.setAutoFillData("-", "-", "-");
+        view.setSubtotals(0, 0, 0);
+        currentTotalAwal = 0;
+        currentTotalAkhir = 0;
     }
 }
