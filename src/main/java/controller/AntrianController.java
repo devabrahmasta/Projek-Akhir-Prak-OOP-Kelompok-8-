@@ -3,18 +3,15 @@ package controller;
 import database.DBConnection;
 import view.AntrianView;
 import view.ComboItem;
-import view.KunjunganDialog;
-import view.ResepDialog;
-// ResepDialogController is in the same package (controller)
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class AntrianController {
     private final AntrianView view;
@@ -23,8 +20,7 @@ public class AntrianController {
     private Thread refreshThread;
     private volatile boolean refreshThreadRunning = true;
 
-    // Menyimpan id kunjungan yang sedang aktif (dipakai oleh ResepDialog)
-    private int idKunjunganAktif = -1;
+    private Consumer<PasienInfo> onPanggilListener;
 
     public AntrianController(AntrianView view) {
         this.view = view;
@@ -62,6 +58,10 @@ public class AntrianController {
     public void stopRefreshThread() {
         refreshThreadRunning = false;
         if (refreshThread != null) refreshThread.interrupt();
+    }
+
+    public void setOnPanggilListener(Consumer<PasienInfo> listener) {
+        this.onPanggilListener = listener;
     }
 
     public void loadDropdowns() {
@@ -160,15 +160,17 @@ public class AntrianController {
                     view.setStatCount(menunggu, diperiksa, selesai);
                     view.setNowServing(nowServingNama, nowServingDokter);
 
-                    boolean isDokter = SessionManager.hasRole("dokter");
-                    boolean isAdmin  = SessionManager.hasRole("admin");
+                    boolean isDokter  = SessionManager.hasRole("dokter");
+                    boolean isAdmin   = SessionManager.hasRole("admin");
+                    boolean canBatal  = SessionManager.hasRole("resepsionis") || isAdmin;
 
                     view.clearAntrianCards();
                     for (Object[] row : waitingList) {
                         int antrianId = (int) row[0];
                         ActionListener onPanggil = (isDokter || isAdmin)
                             ? e -> panggilPasien(antrianId) : null;
-                        ActionListener onBatal = e -> batalkanAntrian(antrianId);
+                        ActionListener onBatal = canBatal
+                            ? e -> batalkanAntrian(antrianId) : null;
                         view.addAntrianCard(
                             (int) row[1], (String) row[2], (String) row[3], (String) row[4],
                             onPanggil, onBatal
@@ -255,7 +257,9 @@ public class AntrianController {
                     PasienInfo info = get();
                     if (info == null) return;
                     loadData(false); // refresh kartu (status berubah ke Dipanggil)
-                    bukaKunjunganDialog(idAntrian, info);
+                    if (onPanggilListener != null) {
+                        onPanggilListener.accept(info);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -264,97 +268,12 @@ public class AntrianController {
         worker.execute();
     }
 
-    private void bukaKunjunganDialog(int idAntrian, PasienInfo info) {
-        Window parent = SwingUtilities.getWindowAncestor(view);
-        KunjunganDialog dialog = new KunjunganDialog(
-            parent, idAntrian, info.idPasien, info.nama, info.noRM, info.namaDokter
-        );
-
-        // Tombol Input Resep — buka ResepDialog di atas KunjunganDialog
-        dialog.addInputResepListener(e -> {
-            if (idKunjunganAktif == -1) {
-                JOptionPane.showMessageDialog(dialog,
-                    "Selesaikan kunjungan dulu sebelum membuat resep.\n" +
-                    "Klik 'Selesaikan Kunjungan' terlebih dahulu.",
-                    "Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            ResepDialog resepDialog = new ResepDialog(dialog, idKunjunganAktif, info.nama);
-            new ResepDialogController(resepDialog, idKunjunganAktif);
-            resepDialog.setVisible(true);
-        });
-
-        // Tombol Selesaikan
-        dialog.addSelesaikanListener(e ->
-            selesaikanKunjungan(dialog, idAntrian, info, dialog.getKeluhan(), dialog.getDiagnosa())
-        );
-
-        dialog.setVisible(true);
-    }
-
-    private void selesaikanKunjungan(KunjunganDialog dialog, int idAntrian,
-                                     PasienInfo info, String keluhan, String diagnosa) {
-        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
-            @Override
-            protected Boolean doInBackground() throws Exception {
-                connection.setAutoCommit(false);
-                try {
-                    // 1. INSERT kunjungan dengan status langsung 'selesai'
-                    String sqlK =
-                        "INSERT INTO kunjungan " +
-                        "(id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa, status) " +
-                        "VALUES (?, ?, NOW(), ?, ?, 'selesai')";
-                    int idKunjungan = -1;
-                    try (PreparedStatement ps = connection.prepareStatement(sqlK, Statement.RETURN_GENERATED_KEYS)) {
-                        ps.setInt(1, info.idPasien);
-                        ps.setInt(2, info.idDokter);
-                        ps.setString(3, keluhan);
-                        ps.setString(4, diagnosa);
-                        ps.executeUpdate();
-                        try (ResultSet rs = ps.getGeneratedKeys()) {
-                            if (rs.next()) idKunjungan = rs.getInt(1);
-                        }
-                    }
-                    idKunjunganAktif = idKunjungan;
-
-                    // 2. Update antrian → Selesai
-                    String sqlA = "UPDATE antrian SET status='Selesai' WHERE id=?";
-                    try (PreparedStatement ps = connection.prepareStatement(sqlA)) {
-                        ps.setInt(1, idAntrian);
-                        ps.executeUpdate();
-                    }
-                    connection.commit();
-                    return true;
-                } catch (Exception e) {
-                    connection.rollback();
-                    throw e;
-                } finally {
-                    connection.setAutoCommit(true);
-                }
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    if (get()) {
-                        dialog.dispose();
-                        loadData(true);
-                    }
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(dialog,
-                        "Gagal menyimpan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        };
-        worker.execute();
-    }
-
     // ---- Inner classes ----
-    private static class PasienInfo {
-        int idPasien, idDokter;
-        String nama, noRM, namaDokter;
+    public static class PasienInfo {
+        public int idPasien, idDokter;
+        public String nama, noRM, namaDokter;
 
-        PasienInfo(int idPasien, String nama, String noRM, String namaDokter, int idDokter) {
+        public PasienInfo(int idPasien, String nama, String noRM, String namaDokter, int idDokter) {
             this.idPasien   = idPasien;
             this.nama       = nama;
             this.noRM       = noRM;

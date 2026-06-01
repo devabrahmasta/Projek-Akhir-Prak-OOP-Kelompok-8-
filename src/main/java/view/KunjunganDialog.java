@@ -16,7 +16,9 @@ public class KunjunganDialog extends JDialog {
     private final Color COLOR_BG      = new Color(240, 246, 246);
     private final Color COLOR_CARD     = Color.WHITE;
     private final Color COLOR_PRIMARY  = new Color(55, 194, 174);
+    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); 
     private final Color COLOR_SUCCESS  = new Color(39, 174, 96);
+    private final Color COLOR_SUCCESS_HOVER  = new Color(36, 105, 40);
     private final Color COLOR_TEXT     = new Color(51, 51, 51);
     private final Color COLOR_MUTED    = new Color(130, 140, 145);
     private final Color COLOR_BORDER   = new Color(230, 230, 230);
@@ -104,11 +106,11 @@ public class KunjunganDialog extends JDialog {
         btnRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
 
         btnInputResep = new JButton("Input Resep");
-        styleButton(btnInputResep, COLOR_PRIMARY);
+        styleRoundedButton(btnInputResep, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
         btnRow.add(btnInputResep);
 
         btnSelesaikan = new JButton("Selesaikan Kunjungan");
-        styleButton(btnSelesaikan, COLOR_SUCCESS);
+        styleRoundedButton(btnSelesaikan, COLOR_SUCCESS, COLOR_SUCCESS_HOVER);
         btnSelesaikan.setEnabled(false);
         btnRow.add(btnSelesaikan);
 
@@ -170,23 +172,61 @@ public class KunjunganDialog extends JDialog {
         return ta;
     }
 
-    private void styleButton(JButton btn, Color bg) {
-        btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Poppins", Font.BOLD, 13));
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
-        btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+    private void styleRoundedButton(JButton button, Color bgColor, Color hoverColor) {
+        final Color COLOR_DISABLED_BG = new Color(235, 235, 235);
+        final Color COLOR_DISABLED_TEXT = new Color(160, 160, 160);
+
+        button.setFont(new Font("Poppins", Font.BOLD, 13));
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+
+        button.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
+            @Override
+            public void installDefaults(AbstractButton b) {
+                super.installDefaults(b);
+                b.setOpaque(false);
+                b.setBorderPainted(false);
+                b.setFocusPainted(false);
+            }
+
             @Override
             public void paint(Graphics g, JComponent c) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(c.isEnabled() ? bg : new Color(200, 200, 200));
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+                AbstractButton b = (AbstractButton) c;
+                ButtonModel model = b.getModel();
+
+                Color bg;
+                if (!b.isEnabled()) {
+                    bg = COLOR_DISABLED_BG;
+                } else if (model.isPressed()) {
+                    bg = hoverColor.darker();
+                } else if (model.isRollover()) {
+                    bg = hoverColor;
+                } else {
+                    bg = bgColor;
+                }
+
+                g2.setColor(bg);
                 g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 12, 12);
-                super.paint(g2, c);
+
+                g2.setFont(b.getFont());
+                g2.setColor(b.isEnabled() ? Color.WHITE : COLOR_DISABLED_TEXT);
+
+                String text = b.getText();
+                if (text != null && !text.isEmpty()) {
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = (c.getWidth() - fm.stringWidth(text)) / 2;
+                    int y = (c.getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(text, x, y);
+                }
+
                 g2.dispose();
             }
         });

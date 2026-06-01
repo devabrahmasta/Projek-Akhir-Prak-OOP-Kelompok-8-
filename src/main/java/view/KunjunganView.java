@@ -1,6 +1,8 @@
 package view;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -10,18 +12,32 @@ import java.awt.event.MouseAdapter;
 
 public class KunjunganView extends JPanel {
 
+    // ---- Form components ----
+    private JLabel lblPasienNama;
+    private JLabel lblPasienRM;
+    private JLabel lblDokterNama;
+    private JTextArea txtKeluhan;
+    private JTextArea txtDiagnosa;
+    private JButton btnInputResep;
+    private JButton btnSelesaikan;
+
+    private JSplitPane splitPane;
+    private JPanel formWrapper;
+    private JLabel titleLabel;
+
+    // ---- Table + search components ----
     private JTable table;
     private DefaultTableModel tableModel;
-
     private JTextField txtCari;
     private JButton btnCari;
     private JComboBox<String> cbSortWaktu;
-
     private JLabel lblStatus;
 
+    // ---- Colors ----
     private final Color COLOR_BG      = new Color(240, 246, 246);
     private final Color COLOR_CARD     = Color.WHITE;
     private final Color COLOR_PRIMARY  = new Color(55, 194, 174);
+    private final Color COLOR_SUCCESS  = new Color(39, 174, 96);
     private final Color COLOR_TEXT     = new Color(51, 51, 51);
     private final Color COLOR_MUTED    = new Color(130, 140, 145);
     private final Color COLOR_BORDER   = new Color(230, 230, 230);
@@ -33,7 +49,7 @@ public class KunjunganView extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         initHeader();
-        initTable();
+        initContent();
     }
 
     // ---- HEADER: judul + search + filter ----
@@ -41,7 +57,7 @@ public class KunjunganView extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
         headerPanel.setBackground(COLOR_BG);
 
-        JLabel titleLabel = new JLabel("Catatan Medis");
+        titleLabel = new JLabel("Catatan Medis");
         titleLabel.setFont(new Font("Poppins", Font.BOLD, 24));
         titleLabel.setForeground(COLOR_TEXT);
         headerPanel.add(titleLabel, BorderLayout.WEST);
@@ -75,22 +91,167 @@ public class KunjunganView extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
     }
 
-    // ---- TABLE: riwayat kunjungan, full height ----
-    private void initTable() {
-        JPanel tableWrapper = new JPanel(new BorderLayout(0, 0)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(COLOR_CARD);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
-                g2.dispose();
+    // ---- CENTER: JSplitPane (form kiri | tabel kanan) ----
+    private void initContent() {
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setDividerLocation(380);
+        splitPane.setBorder(null);
+        splitPane.setOpaque(false);
+
+        // ========== PANEL KIRI: FORM ==========
+        formWrapper = createRoundedPanel();
+        formWrapper.setLayout(new BorderLayout());
+        formWrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(COLOR_CARD);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(4, 0, 4, 0);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+
+        // Form title
+        JLabel formTitle = new JLabel("Form Kunjungan");
+        formTitle.setFont(new Font("Poppins", Font.BOLD, 16));
+        formTitle.setForeground(COLOR_TEXT);
+        formPanel.add(formTitle, gbc);
+
+        // Pasien info panel (read-only)
+        gbc.gridy++;
+        gbc.insets = new Insets(8, 0, 4, 0);
+        JPanel pasienInfoPanel = new JPanel();
+        pasienInfoPanel.setLayout(new BoxLayout(pasienInfoPanel, BoxLayout.Y_AXIS));
+        pasienInfoPanel.setBackground(COLOR_INPUT_BG);
+        pasienInfoPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(COLOR_BORDER, 1),
+            BorderFactory.createEmptyBorder(10, 12, 10, 12)
+        ));
+
+        lblPasienNama = new JLabel("—");
+        lblPasienNama.setFont(new Font("Poppins", Font.BOLD, 13));
+        lblPasienNama.setForeground(COLOR_PRIMARY);
+        lblPasienNama.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        lblPasienRM = new JLabel("No. RM: —");
+        lblPasienRM.setFont(new Font("Poppins", Font.PLAIN, 11));
+        lblPasienRM.setForeground(COLOR_MUTED);
+        lblPasienRM.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        lblDokterNama = new JLabel("Dokter: —");
+        lblDokterNama.setFont(new Font("Poppins", Font.PLAIN, 11));
+        lblDokterNama.setForeground(COLOR_MUTED);
+        lblDokterNama.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        pasienInfoPanel.add(lblPasienNama);
+        pasienInfoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        pasienInfoPanel.add(lblPasienRM);
+        pasienInfoPanel.add(Box.createRigidArea(new Dimension(0, 2)));
+        pasienInfoPanel.add(lblDokterNama);
+
+        formPanel.add(pasienInfoPanel, gbc);
+
+        // Keluhan label
+        gbc.gridy++;
+        gbc.insets = new Insets(12, 0, 2, 0);
+        JLabel lblKeluhan = new JLabel("Keluhan Pasien:");
+        lblKeluhan.setFont(new Font("Poppins", Font.BOLD, 12));
+        lblKeluhan.setForeground(COLOR_MUTED);
+        formPanel.add(lblKeluhan, gbc);
+
+        // Keluhan textarea
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        txtKeluhan = new JTextArea(4, 15);
+        txtKeluhan.setLineWrap(true);
+        txtKeluhan.setWrapStyleWord(true);
+        txtKeluhan.setFont(new Font("Poppins", Font.PLAIN, 12));
+        txtKeluhan.setBackground(COLOR_INPUT_BG);
+        txtKeluhan.setForeground(COLOR_TEXT);
+        txtKeluhan.setCaretColor(COLOR_TEXT);
+        txtKeluhan.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        txtKeluhan.setEnabled(false);
+        JScrollPane scrollKeluhan = new JScrollPane(txtKeluhan);
+        scrollKeluhan.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        formPanel.add(scrollKeluhan, gbc);
+
+        // Diagnosa label
+        gbc.gridy++;
+        gbc.insets = new Insets(8, 0, 2, 0);
+        JLabel lblDiagnosa = new JLabel("Diagnosa:");
+        lblDiagnosa.setFont(new Font("Poppins", Font.BOLD, 12));
+        lblDiagnosa.setForeground(COLOR_MUTED);
+        formPanel.add(lblDiagnosa, gbc);
+
+        // Diagnosa textarea
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        txtDiagnosa = new JTextArea(4, 15);
+        txtDiagnosa.setLineWrap(true);
+        txtDiagnosa.setWrapStyleWord(true);
+        txtDiagnosa.setFont(new Font("Poppins", Font.PLAIN, 12));
+        txtDiagnosa.setBackground(COLOR_INPUT_BG);
+        txtDiagnosa.setForeground(COLOR_TEXT);
+        txtDiagnosa.setCaretColor(COLOR_TEXT);
+        txtDiagnosa.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        txtDiagnosa.setEnabled(false);
+        JScrollPane scrollDiagnosa = new JScrollPane(txtDiagnosa);
+        scrollDiagnosa.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
+        formPanel.add(scrollDiagnosa, gbc);
+
+        // btnInputResep
+        gbc.gridy++;
+        gbc.insets = new Insets(14, 0, 4, 0);
+        btnInputResep = new JButton("Input Resep");
+        styleButton(btnInputResep, COLOR_PRIMARY);
+        btnInputResep.setEnabled(false);
+        formPanel.add(btnInputResep, gbc);
+
+        // btnSelesaikan
+        gbc.gridy++;
+        gbc.insets = new Insets(4, 0, 4, 0);
+        btnSelesaikan = new JButton("✓ Selesaikan Kunjungan");
+        styleButton(btnSelesaikan, COLOR_SUCCESS);
+        btnSelesaikan.setEnabled(false);
+        formPanel.add(btnSelesaikan, gbc);
+
+        // Spacer
+        gbc.gridy++;
+        gbc.weighty = 1.0;
+        formPanel.add(Box.createVerticalGlue(), gbc);
+
+        // DocumentListener: enable Selesaikan saat kedua field terisi
+        DocumentListener dl = new DocumentListener() {
+            public void insertUpdate(DocumentEvent e)  { checkReady(); }
+            public void removeUpdate(DocumentEvent e)  { checkReady(); }
+            public void changedUpdate(DocumentEvent e) { checkReady(); }
+
+            private void checkReady() {
+                boolean ready = txtKeluhan.isEnabled()
+                    && !txtKeluhan.getText().trim().isEmpty()
+                    && !txtDiagnosa.getText().trim().isEmpty();
+                btnSelesaikan.setEnabled(ready);
             }
         };
-        tableWrapper.setOpaque(false);
+        txtKeluhan.getDocument().addDocumentListener(dl);
+        txtDiagnosa.getDocument().addDocumentListener(dl);
+
+        JScrollPane formScroll = new JScrollPane(formPanel);
+        formScroll.setBorder(null);
+        formScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        formScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        formScroll.getViewport().setBackground(COLOR_CARD);
+        formWrapper.add(formScroll, BorderLayout.CENTER);
+
+        splitPane.setLeftComponent(formWrapper);
+
+        // ========== PANEL KANAN: TABEL ==========
+        JPanel tableWrapper = createRoundedPanel();
+        tableWrapper.setLayout(new BorderLayout(0, 0));
         tableWrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Table title row
         JPanel topRow = new JPanel(new BorderLayout());
         topRow.setOpaque(false);
         topRow.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
@@ -100,8 +261,7 @@ public class KunjunganView extends JPanel {
         topRow.add(lblTableTitle, BorderLayout.WEST);
         tableWrapper.add(topRow, BorderLayout.NORTH);
 
-        // Model: ID hidden | Pasien | Dokter | Waktu | Keluhan | Diagnosa | Status
-        String[] columns = {"ID", "Pasien", "Dokter", "Waktu Kunjungan", "Keluhan", "Diagnosa", "Status"};
+        String[] columns = {"ID", "Pasien", "Dokter", "Waktu Kunjungan", "Keluhan", "Diagnosa", "Obat Diresepkan", "Status"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
@@ -109,7 +269,6 @@ public class KunjunganView extends JPanel {
         table = new JTable(tableModel);
         styleTable(table);
 
-        // Hide ID column
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
@@ -119,14 +278,30 @@ public class KunjunganView extends JPanel {
         scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         tableWrapper.add(scrollPane, BorderLayout.CENTER);
 
-        // Status bar
         lblStatus = new JLabel("Memuat data...");
         lblStatus.setFont(new Font("Poppins", Font.ITALIC, 11));
         lblStatus.setForeground(COLOR_MUTED);
         lblStatus.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
         tableWrapper.add(lblStatus, BorderLayout.SOUTH);
 
-        add(tableWrapper, BorderLayout.CENTER);
+        splitPane.setRightComponent(tableWrapper);
+        add(splitPane, BorderLayout.CENTER);
+    }
+
+    // ---- Helpers ----
+    private JPanel createRoundedPanel() {
+        JPanel p = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(COLOR_CARD);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2.dispose();
+            }
+        };
+        p.setOpaque(false);
+        return p;
     }
 
     private void styleTextField(JTextField f) {
@@ -148,12 +323,12 @@ public class KunjunganView extends JPanel {
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+        btn.setBorder(BorderFactory.createEmptyBorder(9, 14, 9, 14));
         btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
             @Override public void paint(Graphics g, JComponent c) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(bg);
+                g2.setColor(c.isEnabled() ? bg : new Color(200, 200, 200));
                 g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 10, 10);
                 super.paint(g2, c);
                 g2.dispose();
@@ -184,12 +359,49 @@ public class KunjunganView extends JPanel {
         t.setDefaultRenderer(Object.class, renderer);
     }
 
-    // ---- Public API ----
-    public DefaultTableModel getTableModel()       { return tableModel; }
-    public JTable getTable()                        { return table; }
-    public String getCariInput()                    { return txtCari.getText().trim(); }
-    public String getSortOption()                   { return (String) cbSortWaktu.getSelectedItem(); }
-    public void setStatusText(String text)          { lblStatus.setText(text); }
+    // ---- Public API: Form ----
+
+    /** Isi form secara otomatis dari data antrian (read-only info pasien + clear keluhan/diagnosa) */
+    public void setFormAutoFilled(String namaPasien, String noRM, String namaDokter) {
+        lblPasienNama.setText(namaPasien);
+        lblPasienRM.setText("No. RM: " + noRM);
+        lblDokterNama.setText("Dokter: " + namaDokter);
+        txtKeluhan.setText("");
+        txtDiagnosa.setText("");
+    }
+
+    /** Enable/disable field input keluhan & diagnosa, dan tombol-tombol form */
+    public void setFormEnabled(boolean enabled) {
+        txtKeluhan.setEnabled(enabled);
+        txtDiagnosa.setEnabled(enabled);
+        btnInputResep.setEnabled(enabled);
+        if (!enabled) btnSelesaikan.setEnabled(false);
+    }
+
+    public void setSelesaikanEnabled(boolean enabled) { btnSelesaikan.setEnabled(enabled); }
+
+    /** Reset form ke kondisi awal (kosong) */
+    public void clearForm() {
+        lblPasienNama.setText("—");
+        lblPasienRM.setText("No. RM: —");
+        lblDokterNama.setText("Dokter: —");
+        txtKeluhan.setText("");
+        txtDiagnosa.setText("");
+    }
+
+    public String getKeluhanInput()  { return txtKeluhan.getText().trim(); }
+    public String getDiagnosaInput() { return txtDiagnosa.getText().trim(); }
+
+    public void addInputResepListener(ActionListener l)  { btnInputResep.addActionListener(l); }
+    public void addSelesaikanListener(ActionListener l)  { btnSelesaikan.addActionListener(l); }
+
+    // ---- Public API: Table ----
+
+    public DefaultTableModel getTableModel()         { return tableModel; }
+    public JTable getTable()                          { return table; }
+    public String getCariInput()                      { return txtCari.getText().trim(); }
+    public String getSortOption()                     { return (String) cbSortWaktu.getSelectedItem(); }
+    public void setStatusText(String text)            { lblStatus.setText(text); }
 
     public int getSelectedId() {
         int row = table.getSelectedRow();
@@ -200,4 +412,15 @@ public class KunjunganView extends JPanel {
     public void addCariListener(ActionListener l)        { btnCari.addActionListener(l); }
     public void addSortListener(ActionListener l)        { cbSortWaktu.addActionListener(l); }
     public void addTableMouseListener(MouseAdapter l)    { table.addMouseListener(l); }
+
+    public void setReadOnlyMode() {
+        if (formWrapper != null) formWrapper.setVisible(false);
+        if (splitPane != null) {
+            splitPane.setDividerLocation(0);
+            splitPane.setDividerSize(0);
+        }
+        if (titleLabel != null) {
+            titleLabel.setText("Riwayat Catatan Medis");
+        }
+    }
 }

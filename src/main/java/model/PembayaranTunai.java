@@ -1,17 +1,17 @@
 package model;
 
 public class PembayaranTunai extends Pembayaran {
-    private double jumlahBayar;
-    private double diskon;
+    private double tarifDokter;
+    private double tarifObat;
 
-    public PembayaranTunai(double jumlahBayar, double diskon) {
-        this.jumlahBayar = jumlahBayar;
-        this.diskon = diskon;
+    public PembayaranTunai(double tarifDokter, double tarifObat) {
+        this.tarifDokter = tarifDokter;
+        this.tarifObat = tarifObat;
     }
 
     @Override
     public double hitungTotal() {
-        return jumlahBayar - diskon;
+        return tarifDokter + tarifObat;
     }
 
     @Override

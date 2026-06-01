@@ -94,14 +94,14 @@ public class TagihanController {
             }
 
             // 2. Dapatkan total Obat
-            String sqlObat = "SELECT dr.jumlah, o.harga FROM detail_resep dr " +
+            String sqlObat = "SELECT SUM(dr.jumlah * o.harga) AS total_obat FROM detail_resep dr " +
                              "JOIN resep r ON dr.id_resep = r.id JOIN obat o ON dr.id_obat = o.id " +
                              "WHERE r.id_kunjungan = ?";
             try (PreparedStatement pst = connection.prepareStatement(sqlObat)) {
                 pst.setInt(1, idKunjungan);
                 try (ResultSet rs = pst.executeQuery()) {
-                    while (rs.next()) {
-                        currentTarifObat += (rs.getInt("jumlah") * rs.getDouble("harga"));
+                    if (rs.next()) {
+                        currentTarifObat = rs.getDouble("total_obat");
                     }
                 }
             }
@@ -122,11 +122,11 @@ public class TagihanController {
 
         // Aturan sesuai implementasi OOP model
         if (jenis.equalsIgnoreCase("BPJS")) {
-            bayar = new PembayaranBPJS(currentTotalAwal, currentTarifObat); // Contoh asumsi diskon BPJS/subsidi
+            bayar = new PembayaranBPJS(currentTarifDokter, currentTarifObat);
         } else if (jenis.equalsIgnoreCase("Asuransi Swasta")) {
-            bayar = new PembayaranAsuransi(currentTotalAwal, 80.0);
+            bayar = new PembayaranAsuransi(currentTarifDokter, currentTarifObat);
         } else {
-            bayar = new PembayaranTunai(currentTotalAwal, 0); 
+            bayar = new PembayaranTunai(currentTarifDokter, currentTarifObat); 
         }
 
         currentTotalAkhir = bayar.hitungTotal();
@@ -195,7 +195,7 @@ public class TagihanController {
                 if ("BPJS".equalsIgnoreCase(jenis)) {
                     pem = new model.PembayaranBPJS(t.getTotalBiaya(), 0);
                 } else if ("Asuransi Swasta".equalsIgnoreCase(jenis)) {
-                    pem = new model.PembayaranAsuransi(t.getTotalBiaya(), 80);
+                    pem = new model.PembayaranAsuransi(t.getTotalBiaya(), 0);
                 } else {
                     pem = new model.PembayaranTunai(t.getTotalBiaya(), 0);
                 }

@@ -47,7 +47,7 @@ public class MainFrame extends JFrame {
         initMVC();
         
         // Mulai dari halaman default berdasarkan role
-        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase() : "";
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         if (role.equals("apoteker")) {
             switchPanel("OBAT");
         } else if (role.equals("dokter")) {
@@ -74,7 +74,7 @@ public class MainFrame extends JFrame {
         
         // --- SIDEBAR DINAMIS ---
         sidebar = new SidebarMenuView();
-        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase() : "";
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         String name = SessionManager.isLoggedIn() ? SessionManager.getUser().getNama() : "User";
         sidebar.setupMenuForRole(role, name);
         
@@ -115,7 +115,7 @@ public class MainFrame extends JFrame {
     }
     
     private void initMVC() {
-        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase() : "";
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         
         if (role.equals("admin")) {
             // Instansiasi SEMUA modul untuk Admin
@@ -195,15 +195,32 @@ public class MainFrame extends JFrame {
             obatView = new ObatView();
             contentPanel.add(obatView, "OBAT");
             obatController = new ObatController(obatView);
-            
+
             resepMasukView = new ResepMasukView();
             contentPanel.add(resepMasukView, "RESEP_MASUK");
             resepMasukController = new ResepMasukController(resepMasukView);
-            
+
             stokMonitorThread = new StokMonitorThread(obatController);
             stokMonitorThread.start();
         }
 
+        // Hubungkan AntrianController → KunjunganController via callback (tanpa popup)
+        if (antrianController != null && kunjunganController != null) {
+            final KunjunganController kc = kunjunganController;
+            antrianController.setOnPanggilListener(info -> {
+                kc.autoFillFromAntrian(
+                    info.idPasien, info.nama, info.noRM,
+                    info.namaDokter, info.idDokter
+                );
+                switchPanel("KUNJUNGAN");
+            });
+
+            kunjunganController.setOnSelesaiListener(() -> {
+                if (antrianController != null) {
+                    antrianController.loadData(true);
+                }
+            });
+        }
     }
     
     private void switchPanel(String cardName) {

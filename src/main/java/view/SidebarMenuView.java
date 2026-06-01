@@ -81,7 +81,7 @@ public class SidebarMenuView extends JPanel {
         btnResepMasuk = createMenuButton("Resep Masuk", "RESEP_MASUK");
         btnTagihan = createMenuButton("Tagihan", "TAGIHAN");
 
-        role = role.toLowerCase();
+        role = role.toLowerCase().trim();
 
         // 3. TAMBAHKAN MENU SESUAI ROLE
         if (role.equals("admin")) {

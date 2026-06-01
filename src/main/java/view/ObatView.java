@@ -219,7 +219,7 @@ public class ObatView extends JPanel {
                 boolean isEditing = btnSimpan.isEnabled(); 
                 boolean hasSelection = tabelObat.getSelectedRow() != -1;
                 
-                btnHapus.setEnabled(hasSelection && !isEditing);
+                btnHapus.setEnabled(hasSelection);
                 btnBatal.setEnabled(isEditing || hasSelection);
             }
         });
@@ -443,7 +443,7 @@ public class ObatView extends JPanel {
         btnSimpan.setEnabled(isEditing);
         
         boolean hasSelection = tabelObat.getSelectedRow() != -1;
-        btnHapus.setEnabled(hasSelection && !isEditing);
+        btnHapus.setEnabled(hasSelection);
         btnBatal.setEnabled(isEditing || hasSelection);
     }
     

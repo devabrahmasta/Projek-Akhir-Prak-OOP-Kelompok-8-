@@ -236,14 +236,16 @@ public class AntrianView extends JPanel {
             btnPanel.add(Box.createRigidArea(new Dimension(0, 4)));
         }
 
-        JButton btnBatal = new JButton("Batal");
-        btnBatal.setFont(new Font("Poppins", Font.BOLD, 10));
-        btnBatal.setBackground(new Color(231, 76, 60));
-        btnBatal.setForeground(Color.WHITE);
-        btnBatal.setFocusPainted(false);
-        btnBatal.setAlignmentX(Component.CENTER_ALIGNMENT);
-        if (onBatal != null) btnBatal.addActionListener(onBatal);
-        btnPanel.add(btnBatal);
+        if (onBatal != null) {
+            JButton btnBatal = new JButton("Batal");
+            btnBatal.setFont(new Font("Poppins", Font.BOLD, 10));
+            btnBatal.setBackground(new Color(231, 76, 60));
+            btnBatal.setForeground(Color.WHITE);
+            btnBatal.setFocusPainted(false);
+            btnBatal.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btnBatal.addActionListener(onBatal);
+            btnPanel.add(btnBatal);
+        }
 
         card.add(btnPanel, BorderLayout.EAST);
 

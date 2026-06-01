@@ -55,7 +55,7 @@ public class ResepMasukView extends JPanel {
         headerPanel.add(titleLabel, BorderLayout.WEST);
         
         btnRefresh = new JButton("Refresh Data");
-        styleRoundedButton(btnRefresh, new Color(52, 152, 219), new Color(41, 128, 185)); // Biru
+        styleRoundedButton(btnRefresh, COLOR_PRIMARY, COLOR_PRIMARY_HOVER); // Biru
         headerPanel.add(btnRefresh, BorderLayout.EAST);
         
         add(headerPanel, BorderLayout.NORTH);

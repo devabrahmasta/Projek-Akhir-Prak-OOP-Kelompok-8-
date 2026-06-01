@@ -1,17 +1,17 @@
 package model;
 
 public class PembayaranAsuransi extends Pembayaran {
-    private double jumlahBayar;
-    private double persentaseCover;
+    private double tarifDokter;
+    private double tarifObat;
 
-    public PembayaranAsuransi(double jumlahBayar, double persentaseCover) {
-        this.jumlahBayar = jumlahBayar;
-        this.persentaseCover = persentaseCover;
+    public PembayaranAsuransi(double tarifDokter, double tarifObat) {
+        this.tarifDokter = tarifDokter;
+        this.tarifObat = tarifObat;
     }
 
     @Override
     public double hitungTotal() {
-        return jumlahBayar - (jumlahBayar * (persentaseCover / 100));
+        return (tarifDokter + tarifObat) * 0.2;
     }
 
     @Override
