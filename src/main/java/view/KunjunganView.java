@@ -1,6 +1,5 @@
 package view;
 
-import controller.SessionManager;
 import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -20,6 +19,7 @@ public class KunjunganView extends JPanel {
     
     private JComboBox<ComboItem> cbPasien;
     private JLabel lblDokter;
+    private JComboBox<ComboItem> cbDokter;
     private JTextField txtTanggal; 
     private JTextArea txtKeluhan;
     private JTextArea txtDiagnosa;
@@ -180,14 +180,13 @@ public class KunjunganView extends JPanel {
         formPanel.add(createFormLabel("Dokter Pemeriksa:"), gbc);
         gbc.gridy++;
         
-        lblDokter = new JLabel();
-        try {
-            lblDokter.setText(SessionManager.getUser().getNama());
-        } catch (Exception e) {
-            lblDokter.setText("Dr. Default"); 
-        }
+        lblDokter = new JLabel("Dr. Pemeriksa");
         lblDokter.setFont(new Font("Poppins", Font.BOLD, 13));
         lblDokter.setForeground(COLOR_TEXT);
+        
+        cbDokter = new JComboBox<>();
+        styleComboBox(cbDokter);
+        cbDokter.setVisible(false); // Sembunyikan by default untuk non-admin
         
         JPanel dokterWrapper = new JPanel(new BorderLayout());
         dokterWrapper.setBackground(COLOR_INPUT_BG);
@@ -196,6 +195,7 @@ public class KunjunganView extends JPanel {
             BorderFactory.createEmptyBorder(6, 10, 6, 10)
         ));
         dokterWrapper.add(lblDokter, BorderLayout.WEST);
+        dokterWrapper.add(cbDokter, BorderLayout.CENTER);
         formPanel.add(dokterWrapper, gbc);
         
         gbc.gridy++;
@@ -349,19 +349,6 @@ public class KunjunganView extends JPanel {
         
         setFormEnabled(false);
         setButtonsState(false);
-        
-        if (SessionManager.isLoggedIn() && SessionManager.hasRole("resepsionis")) {
-            btnTambah.setVisible(false);
-            btnSimpan.setVisible(false);
-            btnHapus.setVisible(false);
-            btnBatal.setVisible(false);
-            cbPasien.setEnabled(false);
-            cbDokter.setEnabled(false);
-            txtTanggal.setEditable(false);
-            txtKeluhan.setEditable(false);
-            txtDiagnosa.setEditable(false);
-            lblStatus.setText("Mode Read-Only (Resepsionis)");
-        }
     }
     
     // --- HELPER METODE UI MODERN ---
@@ -500,15 +487,28 @@ public class KunjunganView extends JPanel {
     
     public void setFormEnabled(boolean enabled) {
         cbPasien.setEnabled(enabled);
-        // lblDokter is read-only
+        cbDokter.setEnabled(enabled);
         txtTanggal.setEnabled(enabled);
         txtKeluhan.setEnabled(enabled);
         txtDiagnosa.setEnabled(enabled);
     }
     
+    public void setReadOnlyMode() {
+        btnTambah.setVisible(false);
+        btnSimpan.setVisible(false);
+        btnHapus.setVisible(false);
+        btnBatal.setVisible(false);
+        cbPasien.setEnabled(false);
+        cbDokter.setEnabled(false);
+        txtTanggal.setEditable(false);
+        txtKeluhan.setEditable(false);
+        txtDiagnosa.setEditable(false);
+        lblStatus.setText("Mode Read-Only (Resepsionis)");
+    }
+    
     public void clearForm() {
         if (cbPasien.getItemCount() > 0) cbPasien.setSelectedIndex(0);
-        // lblDokter is read-only
+        if (cbDokter.getItemCount() > 0) cbDokter.setSelectedIndex(0);
         txtTanggal.setText("");
         txtKeluhan.setText("");
         txtDiagnosa.setText("");
@@ -517,7 +517,9 @@ public class KunjunganView extends JPanel {
     
     public void fillForm(ComboItem pasienItem, ComboItem dokterItem, String tgl, String keluhan, String diagnosa) {
         cbPasien.setSelectedItem(pasienItem);
-        // lblDokter is read-only
+        if (dokterItem != null && cbDokter.isVisible()) {
+            setSelectedDokter(dokterItem);
+        }
         txtTanggal.setText(tgl);
         txtKeluhan.setText(keluhan);
         txtDiagnosa.setText(diagnosa);
@@ -531,12 +533,43 @@ public class KunjunganView extends JPanel {
     }
     
     public void setDokterList(ComboItem[] items) {
-        // read-only, no combobox
+        cbDokter.removeAllItems();
+        if (items != null) {
+            for (ComboItem item : items) {
+                cbDokter.addItem(item);
+            }
+        }
+    }
+    
+    public void setSelectedDokter(ComboItem item) {
+        if (item == null) {
+            cbDokter.setSelectedIndex(-1);
+            return;
+        }
+        for (int i = 0; i < cbDokter.getItemCount(); i++) {
+            if (cbDokter.getItemAt(i).getId() == item.getId()) {
+                cbDokter.setSelectedIndex(i);
+                break;
+            }
+        }
+    }
+    
+    public void setDokterName(String name) {
+        lblDokter.setText(name);
+    }
+    
+    public void showDokterCombo(boolean show) {
+        cbDokter.setVisible(show);
+        lblDokter.setVisible(!show);
+        cbDokter.revalidate();
+        cbDokter.repaint();
+        lblDokter.revalidate();
+        lblDokter.repaint();
     }
     
     public ComboItem getSelectedPasien() { return (ComboItem) cbPasien.getSelectedItem(); }
     public ComboItem getSelectedDokter() { 
-        return null; // read-only di view ini
+        return (ComboItem) cbDokter.getSelectedItem(); 
     }
     public String getTanggalInput() { return txtTanggal.getText().trim(); }
     public String getKeluhanInput() { return txtKeluhan.getText().trim(); }

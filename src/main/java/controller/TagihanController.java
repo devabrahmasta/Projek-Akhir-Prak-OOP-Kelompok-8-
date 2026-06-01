@@ -157,16 +157,67 @@ public class TagihanController {
     }
 
     private void loadRiwayatTagihan() {
-        String sql = "SELECT t.id, p.nama AS pasien, d.nama AS dokter, t.total_biaya, t.jenis_pembayaran, t.status_pembayaran " +
+        String sql = "SELECT t.id, t.total_biaya, t.jenis_pembayaran, t.status_pembayaran, t.tanggal_pembayaran, " +
+                     "p.nama AS pasien, d.nama AS dokter, d.spesialisasi, k.id AS kunjungan_id " +
                      "FROM tagihan t JOIN kunjungan k ON t.id_kunjungan = k.id " +
-                     "JOIN pasien p ON k.id_pasien = p.id JOIN dokter d ON k.id_dokter = d.id ORDER BY t.id DESC";
+                     "JOIN pasien p ON k.id_pasien = p.id " +
+                     "JOIN dokter d ON k.id_dokter = d.id " +
+                     "ORDER BY t.id DESC";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             DefaultTableModel model = view.getTableModel();
             model.setRowCount(0);
+            List<model.Tagihan> tagihanList = new ArrayList<>();
             while (rs.next()) {
+                model.Pasien p = new model.Pasien();
+                p.setNama(rs.getString("pasien"));
+                
+                String spec = rs.getString("spesialisasi");
+                model.Dokter d = "Umum".equalsIgnoreCase(spec) ?
+                                 new model.DokterUmum(-1, rs.getString("dokter")) :
+                                 new model.DokterSpesialis(-1, rs.getString("dokter"), spec);
+                                 
+                model.Kunjungan k = new model.Kunjungan();
+                k.setId(rs.getInt("kunjungan_id"));
+                k.setPasien(p);
+                k.setDokter(d);
+                
+                model.Tagihan t = new model.Tagihan(
+                    rs.getInt("id"),
+                    k,
+                    rs.getDouble("total_biaya"),
+                    rs.getTimestamp("tanggal_pembayaran")
+                );
+                
+                String jenis = rs.getString("jenis_pembayaran");
+                model.Pembayaran pem;
+                if ("BPJS".equalsIgnoreCase(jenis)) {
+                    pem = new model.PembayaranBPJS(t.getTotalBiaya(), 0);
+                } else if ("Asuransi Swasta".equalsIgnoreCase(jenis)) {
+                    pem = new model.PembayaranAsuransi(t.getTotalBiaya(), 80);
+                } else {
+                    pem = new model.PembayaranTunai(t.getTotalBiaya(), 0);
+                }
+                t.setPembayaran(pem);
+                tagihanList.add(t);
+            }
+            
+            for (model.Tagihan t : tagihanList) {
+                String jenisPembayaran = "";
+                if (t.getPembayaran() instanceof model.PembayaranBPJS) {
+                    jenisPembayaran = "BPJS";
+                } else if (t.getPembayaran() instanceof model.PembayaranAsuransi) {
+                    jenisPembayaran = "Asuransi Swasta";
+                } else {
+                    jenisPembayaran = "Tunai";
+                }
+                
                 model.addRow(new Object[]{
-                    "INV-" + rs.getInt("id"), rs.getString("pasien"), rs.getString("dokter"),
-                    String.format("Rp %,.2f", rs.getDouble("total_biaya")), rs.getString("jenis_pembayaran"), rs.getString("status_pembayaran")
+                    "INV-" + t.getId(), 
+                    t.getKunjungan().getPasien().getNama(), 
+                    t.getKunjungan().getDokter().getNama(),
+                    String.format("Rp %,.2f", t.getTotalBiaya()), 
+                    jenisPembayaran, 
+                    "Lunas"
                 });
             }
         } catch (SQLException e) {

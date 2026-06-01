@@ -98,11 +98,8 @@ public class Pasien extends Person implements Notifiable {
     }
 
     @Override
-    public void kirimNotifikasi(String pesan) {
+    public String kirimNotifikasi(String pesan) {
         String telpStr = (noTelp != null && !noTelp.isEmpty()) ? noTelp : "-";
-        javax.swing.JOptionPane.showMessageDialog(null,
-            "=== NOTIFIKASI PASIEN ===\nKepada: " + nama + " (" + telpStr + ")\n\n" + pesan,
-            "Notifikasi Klinik - Medika Center",
-            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+        return "=== NOTIFIKASI PASIEN ===\nKepada: " + nama + " (" + telpStr + ")\n\n" + pesan;
     }
 }

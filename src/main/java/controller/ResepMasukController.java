@@ -80,7 +80,7 @@ public class ResepMasukController {
                     "FROM resep r " +
                     "JOIN kunjungan k ON r.id_kunjungan = k.id " +
                     "JOIN pasien   p ON k.id_pasien  = p.id " +
-                    "JOIN dokter   d ON r.id_dokter  = d.id " +
+                    "JOIN dokter   d ON k.id_dokter  = d.id " +
                     "WHERE r.status = 'belum_disiapkan' " +
                     "ORDER BY k.tanggal_kunjungan ASC";
 
@@ -202,7 +202,25 @@ public class ResepMasukController {
 
                 connection.setAutoCommit(false);
                 try {
-                    // 1. UPDATE status resep
+                    // 1. Cek ketersediaan stok obat terlebih dahulu
+                    String sqlCheckStok = "SELECT o.nama, o.stok, dr.jumlah FROM detail_resep dr " +
+                                          "JOIN obat o ON dr.id_obat = o.id WHERE dr.id_resep = ?";
+                    try (PreparedStatement pst = connection.prepareStatement(sqlCheckStok)) {
+                        pst.setInt(1, item.id);
+                        try (ResultSet rs = pst.executeQuery()) {
+                            while (rs.next()) {
+                                String namaObat = rs.getString("nama");
+                                int stokTersedia = rs.getInt("stok");
+                                int jumlahDiminta = rs.getInt("jumlah");
+                                if (stokTersedia < jumlahDiminta) {
+                                    throw new Exception("Stok obat '" + namaObat + "' tidak mencukupi! " +
+                                                        "(Tersedia: " + stokTersedia + ", Diminta: " + jumlahDiminta + ")");
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. UPDATE status resep
                     String sqlUpdateResep = "UPDATE resep SET status = 'sudah_disiapkan' WHERE id = ?";
                     try (PreparedStatement pst = connection.prepareStatement(sqlUpdateResep)) {
                         pst.setInt(1, item.id);
@@ -213,7 +231,7 @@ public class ResepMasukController {
                         }
                     }
 
-                    // 2. Ambil detail resep untuk kurangi stok
+                    // 3. Ambil detail resep untuk kurangi stok
                     String sqlSelectDetail = "SELECT id_obat, jumlah FROM detail_resep WHERE id_resep = ?";
                     List<int[]> obatList = new ArrayList<>();
                     try (PreparedStatement pst = connection.prepareStatement(sqlSelectDetail)) {
@@ -225,7 +243,7 @@ public class ResepMasukController {
                         }
                     }
 
-                    // 3. UPDATE stok obat
+                    // 4. UPDATE stok obat
                     String sqlUpdateStok = "UPDATE obat SET stok = stok - ? WHERE id = ?";
                     try (PreparedStatement pst = connection.prepareStatement(sqlUpdateStok)) {
                         for (int[] obatItem : obatList) {
@@ -238,7 +256,7 @@ public class ResepMasukController {
 
                     connection.commit();
                     return true;
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     connection.rollback();
                     throw e;
                 } finally {

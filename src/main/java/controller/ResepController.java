@@ -166,13 +166,23 @@ public class ResepController {
                 List<Object[]> data = new ArrayList<>();
                 if (connection == null) return data;
                 
-                int idDokter = SessionManager.getUser().getId();
+                int idUser = SessionManager.getUser().getId();
+                int idDokter = -1;
+                String sqlDoc = "SELECT id FROM dokter WHERE id_user = ?";
+                try (PreparedStatement pstDoc = connection.prepareStatement(sqlDoc)) {
+                    pstDoc.setInt(1, idUser);
+                    try (ResultSet rsDoc = pstDoc.executeQuery()) {
+                        if (rsDoc.next()) {
+                            idDokter = rsDoc.getInt("id");
+                        }
+                    }
+                }
                 
                 String sql = "SELECT r.id, k.id AS id_kunjungan, k.tanggal_kunjungan, " +
                              "(SELECT COUNT(*) FROM detail_resep dr WHERE dr.id_resep = r.id) as jml_item " +
                              "FROM resep r " +
                              "JOIN kunjungan k ON r.id_kunjungan = k.id " +
-                             "WHERE k.id_pasien = ? AND r.id_dokter = ? " +
+                             "WHERE k.id_pasien = ? AND k.id_dokter = ? " +
                              "ORDER BY k.tanggal_kunjungan DESC";
                              
                 try (PreparedStatement pst = connection.prepareStatement(sql)) {
@@ -276,12 +286,11 @@ public class ResepController {
                 try {
                     // Jika resep belum ada, buat baru
                     if (activeResepId == -1) {
-                        String sqlInsertResep = "INSERT INTO resep (id_kunjungan, id_dokter, keterangan, tanggal) VALUES (?, ?, ?, ?)";
+                        String sqlInsertResep = "INSERT INTO resep (id_kunjungan, tanggal, status) VALUES (?, ?, ?)";
                         try (PreparedStatement pst = connection.prepareStatement(sqlInsertResep, Statement.RETURN_GENERATED_KEYS)) {
                             pst.setInt(1, activeKunjunganId);
-                            pst.setInt(2, idDokter);
-                            pst.setString(3, "Resep Kunjungan " + activeKunjunganId);
-                            pst.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+                            pst.setDate(2, new java.sql.Date(System.currentTimeMillis()));
+                            pst.setString(3, "belum_disiapkan");
                             pst.executeUpdate();
                             
                             try (ResultSet rs = pst.getGeneratedKeys()) {

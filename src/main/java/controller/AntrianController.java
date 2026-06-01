@@ -66,7 +66,7 @@ public class AntrianController {
                 List<ComboItem> dokterList = new ArrayList<>();
                 if (connection == null) return dokterList;
 
-                String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter ORDER BY nama ASC";
+                String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter WHERE is_active = 1 ORDER BY nama ASC";
                 try (Statement stmt = connection.createStatement();
                      ResultSet rs = stmt.executeQuery(sqlDokter)) {
                     while (rs.next()) {
@@ -195,21 +195,60 @@ public class AntrianController {
     }
 
     private void panggilPasien(int idAntrian) {
-        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
-            protected Void doInBackground() throws Exception {
-                // Opsional: Anda bisa menambahkan query untuk me-reset pasien yang 'Diperiksa' menjadi 'Selesai' di sini sebelum memanggil yang baru
+            protected String doInBackground() throws Exception {
+                if (connection == null) return null;
                 
-                String sql = "UPDATE antrian SET status = 'Dipanggil' WHERE id = ?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                // 1. Update status antrian menjadi 'Dipanggil'
+                String sqlUpdate = "UPDATE antrian SET status = 'Dipanggil' WHERE id = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdate)) {
                     pstmt.setInt(1, idAntrian);
                     pstmt.executeUpdate();
                 }
+                
+                // 2. Cari detail pasien untuk direhidrasi
+                String sqlPasien = "SELECT p.id, p.nama, p.no_rm, p.alamat, p.no_telp, p.tanggal_lahir, p.golongan_darah, p.alergi " +
+                                   "FROM antrian a JOIN pasien p ON a.id_pasien = p.id " +
+                                   "WHERE a.id = ?";
+                model.Pasien pasien = null;
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlPasien)) {
+                    pstmt.setInt(1, idAntrian);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        if (rs.next()) {
+                            pasien = new model.Pasien(
+                                rs.getInt("id"),
+                                rs.getString("nama"),
+                                rs.getString("no_rm"),
+                                rs.getString("alamat"),
+                                rs.getString("no_telp"),
+                                rs.getDate("tanggal_lahir"),
+                                rs.getString("golongan_darah"),
+                                rs.getString("alergi")
+                            );
+                        }
+                    }
+                }
+                
+                // 3. Kirim notifikasi melalui model domain
+                if (pasien != null) {
+                    return pasien.kirimNotifikasi("Silakan menuju ke ruang periksa.");
+                }
                 return null;
             }
+            
             @Override
             protected void done() {
-                loadData(true);
+                try {
+                    String notification = get();
+                    if (notification != null) {
+                        JOptionPane.showMessageDialog(view, notification, "Panggilan Pasien", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    loadData(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    loadData(true);
+                }
             }
         };
         worker.execute();

@@ -1,6 +1,5 @@
 package view;
 
-import controller.SessionManager;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -196,14 +195,6 @@ public class DokterView extends JPanel {
         // Inisialisasi State Awal
         btnUbah.setEnabled(false);
         btnHapus.setEnabled(false);
-        
-        if (SessionManager.isLoggedIn() && SessionManager.hasRole("resepsionis")) {
-            btnTambah.setVisible(false);
-            btnUbah.setVisible(false);
-            btnHapus.setVisible(false);
-            txtNama.setEditable(false);
-            txtSpesialisasi.setEditable(false);
-        }
     }
     
     // --- HELPER METODE UI MODERN ---
@@ -342,4 +333,12 @@ public class DokterView extends JPanel {
     public JButton getBtnUbah() { return btnUbah; }
     public JButton getBtnHapus() { return btnHapus; }
     public JButton getBtnRefresh() { return btnRefresh; }
+    
+    public void setReadOnlyMode() {
+        btnTambah.setVisible(false);
+        btnUbah.setVisible(false);
+        btnHapus.setVisible(false);
+        txtNama.setEditable(false);
+        txtSpesialisasi.setEditable(false);
+    }
 }

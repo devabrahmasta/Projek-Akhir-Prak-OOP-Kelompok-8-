@@ -79,22 +79,7 @@ public class LoginController {
                             view.dispose();
 
                             SwingUtilities.invokeLater(() -> {
-                                // =========================================================================
-                                // TODO: LETAKKAN NAVIGASI KE HALAMAN ROLE DI SINI
-                                // =========================================================================
-                                // Anda bisa menggunakan SessionManager.getUser().getRole() untuk 
-                                // melakukan percabangan form/view mana yang harus dibuka.
-                                //
-                                // Contoh:
-                                // if (SessionManager.hasRole("admin")) {
-                                //     new AdminFrame().setVisible(true);
-                                // } else if (SessionManager.hasRole("resepsionis")) {
-                                //     // Buka view resepsionis
-                                // }
-                                
-                                // Baris ini adalah placeholder sementara menuju MainFrame
-                                new MainFrame().setVisible(true); 
-                                // =========================================================================
+                                new MainFrame().setVisible(true);
                             });
                         } else {
                             view.showError("Login dibatalkan oleh pengguna.");

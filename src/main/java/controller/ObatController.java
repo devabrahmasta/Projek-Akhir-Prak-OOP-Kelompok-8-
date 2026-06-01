@@ -47,7 +47,7 @@ public class ObatController {
         if (connection == null) return listObat;
 
         // Query cukup mengambil kolom yang dibutuhkan oleh StokMonitorThread
-        String sql = "SELECT kode_obat, nama, stok FROM obat";
+        String sql = "SELECT id, kode_obat, nama, stok, harga FROM obat";
         
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
