@@ -18,6 +18,7 @@ public class AntrianView extends JPanel {
     private JPanel panelKartuAntrian;
     private JTable tabelSelesai;
     private DefaultTableModel tableModelSelesai;
+    private JPanel emptyStatePanel;
 
     private final Color COLOR_BG = new Color(240, 246, 246);
     private final Color COLOR_CARD = Color.WHITE;
@@ -149,19 +150,60 @@ public class AntrianView extends JPanel {
 
     public void clearAntrianCards() {
         panelKartuAntrian.removeAll();
+        showEmptyState();
         panelKartuAntrian.revalidate();
         panelKartuAntrian.repaint();
     }
 
-    public void addAntrianCard(int nomorUrut, String nama, String rm, String dokter, ActionListener onPanggil) {
+    public void showEmptyState() {
+        emptyStatePanel = new JPanel();
+        emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
+        emptyStatePanel.setBackground(COLOR_BG);
+        emptyStatePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        emptyStatePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        JLabel icon = new JLabel("—", SwingConstants.CENTER);
+        icon.setFont(new Font("Poppins", Font.BOLD, 32));
+        icon.setForeground(COLOR_TEXT_MUTED);
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel msg1 = new JLabel("Belum ada antrian", SwingConstants.CENTER);
+        msg1.setFont(new Font("Poppins", Font.BOLD, 13));
+        msg1.setForeground(COLOR_TEXT_MUTED);
+        msg1.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel msg2 = new JLabel("Antrian muncul setelah pasien didaftarkan", SwingConstants.CENTER);
+        msg2.setFont(new Font("Poppins", Font.PLAIN, 11));
+        msg2.setForeground(COLOR_TEXT_MUTED);
+        msg2.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        emptyStatePanel.add(Box.createVerticalGlue());
+        emptyStatePanel.add(icon);
+        emptyStatePanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        emptyStatePanel.add(msg1);
+        emptyStatePanel.add(Box.createRigidArea(new Dimension(0, 4)));
+        emptyStatePanel.add(msg2);
+        emptyStatePanel.add(Box.createVerticalGlue());
+
+        panelKartuAntrian.add(emptyStatePanel);
+        panelKartuAntrian.revalidate();
+        panelKartuAntrian.repaint();
+    }
+
+    public void addAntrianCard(int nomorUrut, String nama, String rm, String dokter,
+                               ActionListener onPanggil, ActionListener onBatal) {
+        if (emptyStatePanel != null && emptyStatePanel.getParent() == panelKartuAntrian) {
+            panelKartuAntrian.remove(emptyStatePanel);
+        }
+
         JPanel card = new JPanel(new BorderLayout(10, 10));
         card.setBackground(COLOR_CARD);
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 4, 0, 0, COLOR_PRIMARY), // Aksen kiri
+            BorderFactory.createMatteBorder(0, 4, 0, 0, COLOR_PRIMARY),
             BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
-        card.setMaximumSize(new Dimension(300, 80));
-        
+        card.setMaximumSize(new Dimension(300, 100));
+
         JLabel lblNo = new JLabel("#" + nomorUrut);
         lblNo.setFont(new Font("Poppins", Font.BOLD, 20));
         lblNo.setForeground(COLOR_PRIMARY);
@@ -178,13 +220,32 @@ public class AntrianView extends JPanel {
         info.add(lblSub);
         card.add(info, BorderLayout.CENTER);
 
-        JButton btn = new JButton("Panggil");
-        btn.setFont(new Font("Poppins", Font.BOLD, 10));
-        btn.setBackground(COLOR_PRIMARY);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.addActionListener(onPanggil);
-        card.add(btn, BorderLayout.EAST);
+        JPanel btnPanel = new JPanel();
+        btnPanel.setLayout(new BoxLayout(btnPanel, BoxLayout.Y_AXIS));
+        btnPanel.setOpaque(false);
+
+        if (onPanggil != null) {
+            JButton btnPanggil = new JButton("Panggil");
+            btnPanggil.setFont(new Font("Poppins", Font.BOLD, 10));
+            btnPanggil.setBackground(COLOR_PRIMARY);
+            btnPanggil.setForeground(Color.WHITE);
+            btnPanggil.setFocusPainted(false);
+            btnPanggil.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btnPanggil.addActionListener(onPanggil);
+            btnPanel.add(btnPanggil);
+            btnPanel.add(Box.createRigidArea(new Dimension(0, 4)));
+        }
+
+        JButton btnBatal = new JButton("Batal");
+        btnBatal.setFont(new Font("Poppins", Font.BOLD, 10));
+        btnBatal.setBackground(new Color(231, 76, 60));
+        btnBatal.setForeground(Color.WHITE);
+        btnBatal.setFocusPainted(false);
+        btnBatal.setAlignmentX(Component.CENTER_ALIGNMENT);
+        if (onBatal != null) btnBatal.addActionListener(onBatal);
+        btnPanel.add(btnBatal);
+
+        card.add(btnPanel, BorderLayout.EAST);
 
         panelKartuAntrian.add(card);
         panelKartuAntrian.add(Box.createRigidArea(new Dimension(0, 10)));

@@ -220,34 +220,47 @@ public class PasienView extends JPanel {
         
         // --- PANEL KANAN (TABEL) ---
         JPanel tableWrapper = createRoundedWrapper();
-        
-        JPanel topTablePanel = new JPanel(new BorderLayout());
+
+        JPanel topTablePanel = new JPanel();
+        topTablePanel.setLayout(new BoxLayout(topTablePanel, BoxLayout.Y_AXIS));
         topTablePanel.setOpaque(false);
         topTablePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        
+
+        // Baris 1: judul
         JLabel tableTitle = new JLabel("Daftar Pasien Terdaftar");
         tableTitle.setFont(new Font("Poppins", Font.BOLD, 16));
         tableTitle.setForeground(COLOR_TEXT);
-        topTablePanel.add(tableTitle, BorderLayout.WEST);
-        
-        // Tambahan Filter Sort
-        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        tableTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+        topTablePanel.add(tableTitle);
+
+        topTablePanel.add(Box.createVerticalStrut(6));
+
+        topTablePanel.add(Box.createRigidArea(new Dimension(0, 6)));
+
+        // Baris 2: sort di kiri, btnDaftarAntrian di kanan
+        JPanel row2 = new JPanel(new BorderLayout());
+        row2.setOpaque(false);
+        row2.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         sortPanel.setOpaque(false);
         JLabel lblSort = new JLabel("Urutkan:");
         lblSort.setFont(new Font("Poppins", Font.PLAIN, 12));
         lblSort.setForeground(COLOR_TEXT_MUTED);
         sortPanel.add(lblSort);
-        
+
         cbSortWaktu = new JComboBox<>(new String[]{"Paling Baru", "Paling Lama"});
         styleComboBox(cbSortWaktu);
         cbSortWaktu.setPreferredSize(new Dimension(140, 30));
         sortPanel.add(cbSortWaktu);
-        
+        row2.add(sortPanel, BorderLayout.WEST);
+
         btnDaftarAntrian = new JButton("+ Daftar Antrian");
         styleRoundedButton(btnDaftarAntrian, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
-        sortPanel.add(btnDaftarAntrian);
-        
-        topTablePanel.add(sortPanel, BorderLayout.EAST);
+        row2.add(btnDaftarAntrian, BorderLayout.EAST);
+        topTablePanel.add(row2);
+        topTablePanel.add(Box.createRigidArea(new Dimension(0, 8)));
+
         tableWrapper.add(topTablePanel, BorderLayout.NORTH);
         
         String[] columns = {"ID", "No. RM", "Nama", "No. Telp", "Tgl Lahir", "Gol. Darah", "Alergi", "Alamat"};

@@ -42,13 +42,15 @@ public class TagihanController {
 
     private void loadKunjunganPending() {
         view.getCbKunjungan().removeAllItems();
-        // Ambil kunjungan yang belum memiliki tagihan
+        // Ambil kunjungan yang sudah selesai dan belum memiliki tagihan
         String sql = "SELECT k.id, p.nama AS nama_pasien, d.nama AS nama_dokter, k.tanggal_kunjungan " +
                      "FROM kunjungan k " +
                      "JOIN pasien p ON k.id_pasien = p.id " +
                      "JOIN dokter d ON k.id_dokter = d.id " +
                      "LEFT JOIN tagihan t ON k.id = t.id_kunjungan " +
-                     "WHERE t.id IS NULL";
+                     "WHERE t.id IS NULL " +
+                     "  AND k.status = 'selesai' " +
+                     "ORDER BY k.tanggal_kunjungan DESC";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 String label = "KJ-" + rs.getInt("id") + " : " + rs.getString("nama_pasien");

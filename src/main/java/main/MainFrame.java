@@ -21,9 +21,8 @@ public class MainFrame extends JFrame {
     private AntrianView antrianView;
     private ObatView obatView;
     private ResepMasukView resepMasukView;
-    private ResepView resepView;
     private TagihanView tagihanView;
-    
+
     // Controllers
     private DashboardController dashboardController;
     private PasienController pasienController;
@@ -32,7 +31,6 @@ public class MainFrame extends JFrame {
     private AntrianController antrianController;
     private ObatController obatController;
     private ResepMasukController resepMasukController;
-    private ResepController resepController;
     private TagihanController tagihanController;
 
     private StokMonitorThread stokMonitorThread;
@@ -53,7 +51,7 @@ public class MainFrame extends JFrame {
         if (role.equals("apoteker")) {
             switchPanel("OBAT");
         } else if (role.equals("dokter")) {
-            switchPanel("KUNJUNGAN");
+            switchPanel("ANTRIAN");
         } else {
             switchPanel("DASHBOARD");
         }
@@ -95,20 +93,23 @@ public class MainFrame extends JFrame {
         if (sidebar.getBtnAntrian() != null) sidebar.getBtnAntrian().addActionListener(e -> switchPanel("ANTRIAN"));
         if (sidebar.getBtnObat() != null) sidebar.getBtnObat().addActionListener(e -> switchPanel("OBAT"));
         if (sidebar.getBtnResepMasuk() != null) sidebar.getBtnResepMasuk().addActionListener(e -> switchPanel("RESEP_MASUK"));
-        if (sidebar.getBtnResep() != null) sidebar.getBtnResep().addActionListener(e -> switchPanel("RESEP"));
         if (sidebar.getBtnTagihan() != null) sidebar.getBtnTagihan().addActionListener(e -> switchPanel("TAGIHAN"));
         
         if (sidebar.getBtnLogout() != null) {
             sidebar.getBtnLogout().addActionListener(e -> {
-                if (stokMonitorThread != null) {
-                    stokMonitorThread.stopMonitor();
-                }
                 if (antrianController != null) {
                     antrianController.stopRefreshThread();
                 }
+                if (stokMonitorThread != null) {
+                    stokMonitorThread.stopMonitor();
+                }
                 SessionManager.logout();
                 this.dispose();
-                new LoginView().setVisible(true); // Kembali ke login
+                SwingUtilities.invokeLater(() -> {
+                    LoginView loginView = new LoginView();
+                    new LoginController(loginView);
+                    loginView.setVisible(true);
+                });
             });
         }
     }
@@ -150,13 +151,9 @@ public class MainFrame extends JFrame {
             contentPanel.add(resepMasukView, "RESEP_MASUK");
             resepMasukController = new ResepMasukController(resepMasukView);
 
-            resepView = new ResepView();
-            contentPanel.add(resepView, "RESEP");
-            resepController = new ResepController(resepView);
-            
             stokMonitorThread = new StokMonitorThread(obatController);
             stokMonitorThread.start();
-            
+
         } else if (role.equals("resepsionis")) {
             // Instansiasi Modul Khusus Resepsionis
             dashboardView = new DashboardView();
@@ -185,18 +182,14 @@ public class MainFrame extends JFrame {
             
         } else if (role.equals("dokter")) {
             // Instansiasi Modul Khusus Dokter
-            kunjunganView = new KunjunganView();
-            contentPanel.add(kunjunganView, "KUNJUNGAN");
-            kunjunganController = new KunjunganController(kunjunganView);
-            
-            resepView = new ResepView();
-            contentPanel.add(resepView, "RESEP");
-            resepController = new ResepController(resepView);
-            
             antrianView = new AntrianView();
             contentPanel.add(antrianView, "ANTRIAN");
             antrianController = new AntrianController(antrianView);
-            
+
+            kunjunganView = new KunjunganView();
+            contentPanel.add(kunjunganView, "KUNJUNGAN");
+            kunjunganController = new KunjunganController(kunjunganView);
+
         } else if (role.equals("apoteker")) {
             // Instansiasi Modul Khusus Apoteker
             obatView = new ObatView();
@@ -211,13 +204,6 @@ public class MainFrame extends JFrame {
             stokMonitorThread.start();
         }
 
-        // Hubungkan Kunjungan Rekam Medis dengan Form Penulisan Resep Dokter secara aman
-        if (kunjunganController != null && resepController != null) {
-            kunjunganController.setOnKunjunganSelectedListener((idKunjungan, idPasien) -> {
-                resepController.setActiveKunjungan(idKunjungan, idPasien);
-                switchPanel("RESEP");
-            });
-        }
     }
     
     private void switchPanel(String cardName) {
@@ -232,7 +218,6 @@ public class MainFrame extends JFrame {
         else if ("ANTRIAN".equals(cardName) && antrianView != null) exists = true;
         else if ("OBAT".equals(cardName) && obatView != null) exists = true;
         else if ("RESEP_MASUK".equals(cardName) && resepMasukView != null) exists = true;
-        else if ("RESEP".equals(cardName) && resepView != null) exists = true;
         else if ("TAGIHAN".equals(cardName) && tagihanView != null) exists = true;
         
         if (!exists) return; // Mengabaikan perpindahan jika view null untuk role tersebut
@@ -249,8 +234,6 @@ public class MainFrame extends JFrame {
             if (pasienController != null) pasienController.loadData();
         } else if ("KUNJUNGAN".equals(cardName)) {
             if (kunjunganController != null) {
-                kunjunganController.loadDropdowns();
-                kunjunganController.loadAntrian();
                 kunjunganController.loadData();
             }
         } else if ("ANTRIAN".equals(cardName)) {

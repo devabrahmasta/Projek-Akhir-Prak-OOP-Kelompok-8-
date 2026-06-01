@@ -18,7 +18,6 @@ public class SidebarMenuView extends JPanel {
     private JButton btnAntrian;
     private JButton btnObat;
     private JButton btnResepMasuk;
-    private JButton btnResep;
     private JButton btnTagihan;
     private JButton btnLogout;
 
@@ -80,7 +79,6 @@ public class SidebarMenuView extends JPanel {
         btnAntrian = createMenuButton("Antrian", "ANTRIAN");
         btnObat = createMenuButton("Data Obat", "OBAT");
         btnResepMasuk = createMenuButton("Resep Masuk", "RESEP_MASUK");
-        btnResep = createMenuButton("Resep", "RESEP");
         btnTagihan = createMenuButton("Tagihan", "TAGIHAN");
 
         role = role.toLowerCase();
@@ -90,23 +88,21 @@ public class SidebarMenuView extends JPanel {
             addMenu(btnDashboard);
             addMenu(btnPasien);
             addMenu(btnDokter);
-            addMenu(btnKunjungan);
             addMenu(btnAntrian);
+            addMenu(btnKunjungan);
             addMenu(btnObat);
             addMenu(btnResepMasuk);
-            addMenu(btnResep);
             addMenu(btnTagihan);
         } else if (role.equals("resepsionis")) {
             addMenu(btnDashboard);
             addMenu(btnPasien);
             addMenu(btnDokter);
-            addMenu(btnKunjungan);
             addMenu(btnAntrian);
+            addMenu(btnKunjungan);
             addMenu(btnTagihan);
         } else if (role.equals("dokter")) {
-            addMenu(btnKunjungan);
-            addMenu(btnResep);
             addMenu(btnAntrian);
+            addMenu(btnKunjungan);
         } else if (role.equals("apoteker")) {
             addMenu(btnObat);
             addMenu(btnResepMasuk);
@@ -199,7 +195,6 @@ public class SidebarMenuView extends JPanel {
     public JButton getBtnAntrian() { return btnAntrian; }
     public JButton getBtnObat() { return btnObat; }
     public JButton getBtnResepMasuk() { return btnResepMasuk; }
-    public JButton getBtnResep() { return btnResep; }
     public JButton getBtnTagihan() { return btnTagihan; }
     public JButton getBtnLogout() { return btnLogout; }
 }

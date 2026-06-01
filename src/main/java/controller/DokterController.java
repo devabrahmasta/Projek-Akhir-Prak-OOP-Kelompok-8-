@@ -33,6 +33,7 @@ public class DokterController {
         view.getBtnTambah().addActionListener(e -> tambahData());
         view.getBtnUbah().addActionListener(e -> ubahData());
         view.getBtnHapus().addActionListener(e -> hapusData());
+        view.addSearchListener(e -> searchData(view.getTxtSearch().getText().trim()));
         
         // Pindaan teks otomatis saat baris tabel dipilih
         view.getTable().getSelectionModel().addListSelectionListener(e -> {
@@ -174,6 +175,53 @@ public class DokterController {
                     }
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(view, "Gagal mengubah data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void searchData(String keyword) {
+        SwingWorker<List<Dokter>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Dokter> doInBackground() throws Exception {
+                List<Dokter> list = new ArrayList<>();
+                if (connection == null) return list;
+                String sql = "SELECT id, nama, spesialisasi FROM dokter WHERE is_active=1 " +
+                             "AND (nama LIKE ? OR spesialisasi LIKE ?) ORDER BY id DESC";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    String kw = "%" + keyword + "%";
+                    ps.setString(1, kw);
+                    ps.setString(2, kw);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            int id = rs.getInt("id");
+                            String nama = rs.getString("nama");
+                            String spesialisasi = rs.getString("spesialisasi");
+                            Dokter d;
+                            if ("Umum".equalsIgnoreCase(spesialisasi)) {
+                                d = new DokterUmum(id, nama);
+                            } else {
+                                d = new DokterSpesialis(id, nama, spesialisasi);
+                            }
+                            list.add(d);
+                        }
+                    }
+                }
+                return list;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Dokter> list = get();
+                    DefaultTableModel model = (DefaultTableModel) view.getTable().getModel();
+                    model.setRowCount(0);
+                    for (Dokter d : list) {
+                        model.addRow(new Object[]{d.getId(), d.getNama(), d.getSpesialisasi()});
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(view, "Error searching: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };

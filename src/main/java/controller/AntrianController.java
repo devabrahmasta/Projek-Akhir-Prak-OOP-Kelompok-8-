@@ -1,11 +1,15 @@
 package controller;
 
 import database.DBConnection;
-import view.ComboItem;
 import view.AntrianView;
+import view.ComboItem;
+import view.KunjunganDialog;
+import view.ResepDialog;
+// ResepDialogController is in the same package (controller)
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.Window;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import java.time.LocalDate;
@@ -15,14 +19,17 @@ import java.util.List;
 public class AntrianController {
     private final AntrianView view;
     private final Connection connection;
-    
+
     private Thread refreshThread;
     private volatile boolean refreshThreadRunning = true;
+
+    // Menyimpan id kunjungan yang sedang aktif (dipakai oleh ResepDialog)
+    private int idKunjunganAktif = -1;
 
     public AntrianController(AntrianView view) {
         this.view = view;
         this.connection = DBConnection.getInstance().getConnection();
-        
+
         initListeners();
         view.setFilterTanggal(LocalDate.now().toString());
         loadDropdowns();
@@ -39,9 +46,9 @@ public class AntrianController {
         refreshThread = new Thread(() -> {
             while (refreshThreadRunning) {
                 try {
-                    Thread.sleep(10000); 
+                    Thread.sleep(10000);
                     if (refreshThreadRunning) {
-                        loadData(false);
+                        SwingUtilities.invokeLater(() -> loadData(false));
                     }
                 } catch (InterruptedException e) {
                     break;
@@ -54,9 +61,7 @@ public class AntrianController {
 
     public void stopRefreshThread() {
         refreshThreadRunning = false;
-        if (refreshThread != null) {
-            refreshThread.interrupt();
-        }
+        if (refreshThread != null) refreshThread.interrupt();
     }
 
     public void loadDropdowns() {
@@ -65,15 +70,11 @@ public class AntrianController {
             protected List<ComboItem> doInBackground() throws Exception {
                 List<ComboItem> dokterList = new ArrayList<>();
                 if (connection == null) return dokterList;
-
-                String sqlDokter = "SELECT id, nama, spesialisasi FROM dokter WHERE is_active = 1 ORDER BY nama ASC";
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sqlDokter)) {
+                String sql = "SELECT id, nama, spesialisasi FROM dokter WHERE is_active=1 ORDER BY nama ASC";
+                try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
                     while (rs.next()) {
-                        dokterList.add(new ComboItem(
-                            rs.getInt("id"),
-                            rs.getString("nama") + " - " + rs.getString("spesialisasi")
-                        ));
+                        dokterList.add(new ComboItem(rs.getInt("id"),
+                            rs.getString("nama") + " - " + rs.getString("spesialisasi")));
                     }
                 }
                 return dokterList;
@@ -81,11 +82,8 @@ public class AntrianController {
 
             @Override
             protected void done() {
-                try {
-                    view.setDokterList(get().toArray(new ComboItem[0]));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                try { view.setDokterList(get().toArray(new ComboItem[0])); }
+                catch (Exception e) { e.printStackTrace(); }
             }
         };
         worker.execute();
@@ -94,9 +92,8 @@ public class AntrianController {
     public void loadData(boolean isManualRefresh) {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             int menunggu = 0, diperiksa = 0, selesai = 0;
-            String nowServingNama = null;
-            String nowServingDokter = null;
-            List<Object[]> waitingList = new ArrayList<>();
+            String nowServingNama = null, nowServingDokter = null;
+            List<Object[]> waitingList  = new ArrayList<>();
             List<Object[]> finishedList = new ArrayList<>();
 
             @Override
@@ -113,7 +110,6 @@ public class AntrianController {
                     "JOIN pasien p ON a.id_pasien = p.id " +
                     "JOIN dokter d ON a.id_dokter = d.id "
                 );
-
                 List<Object> params = new ArrayList<>();
                 boolean hasWhere = false;
 
@@ -122,41 +118,34 @@ public class AntrianController {
                     params.add(filterDokter.getId());
                     hasWhere = true;
                 }
-
                 if (!filterTgl.isEmpty()) {
                     sql.append(hasWhere ? " AND" : " WHERE").append(" a.tanggal = ?");
                     params.add(Date.valueOf(filterTgl));
                 }
-
                 sql.append(" ORDER BY a.nomor_antrian ASC");
 
                 try (PreparedStatement pstmt = connection.prepareStatement(sql.toString())) {
-                    for (int i = 0; i < params.size(); i++) {
-                        pstmt.setObject(i + 1, params.get(i));
-                    }
-
+                    for (int i = 0; i < params.size(); i++) pstmt.setObject(i + 1, params.get(i));
                     try (ResultSet rs = pstmt.executeQuery()) {
                         int noSelesai = 1;
                         while (rs.next()) {
-                            String status = rs.getString("status");
+                            String status    = rs.getString("status");
                             String namaPasien = rs.getString("nama_pasien");
                             String namaDokter = rs.getString("nama_dokter");
 
                             if (status.equalsIgnoreCase("Menunggu")) {
                                 menunggu++;
                                 waitingList.add(new Object[]{
-                                    rs.getInt("id"), rs.getInt("nomor_antrian"), 
+                                    rs.getInt("id"), rs.getInt("nomor_antrian"),
                                     namaPasien, rs.getString("no_rm"), namaDokter
                                 });
                             } else if (status.equalsIgnoreCase("Dipanggil") || status.equalsIgnoreCase("Diperiksa")) {
                                 diperiksa++;
-                                nowServingNama = namaPasien;
+                                nowServingNama   = namaPasien;
                                 nowServingDokter = namaDokter;
                             } else if (status.equalsIgnoreCase("Selesai")) {
                                 selesai++;
-                                finishedList.add(new Object[]{
-                                    noSelesai++, namaPasien, rs.getString("no_rm"), namaDokter, status
-                                });
+                                finishedList.add(new Object[]{noSelesai++, namaPasien, rs.getString("no_rm"), namaDokter, status});
                             }
                         }
                     }
@@ -168,23 +157,29 @@ public class AntrianController {
             protected void done() {
                 try {
                     get();
-                    
                     view.setStatCount(menunggu, diperiksa, selesai);
                     view.setNowServing(nowServingNama, nowServingDokter);
+
+                    boolean isDokter = SessionManager.hasRole("dokter");
+                    boolean isAdmin  = SessionManager.hasRole("admin");
 
                     view.clearAntrianCards();
                     for (Object[] row : waitingList) {
                         int antrianId = (int) row[0];
-                        ActionListener onPanggil = e -> panggilPasien(antrianId);
-                        view.addAntrianCard((int) row[1], (String) row[2], (String) row[3], (String) row[4], onPanggil);
+                        ActionListener onPanggil = (isDokter || isAdmin)
+                            ? e -> panggilPasien(antrianId) : null;
+                        ActionListener onBatal = e -> batalkanAntrian(antrianId);
+                        view.addAntrianCard(
+                            (int) row[1], (String) row[2], (String) row[3], (String) row[4],
+                            onPanggil, onBatal
+                        );
                     }
+                    if (waitingList.isEmpty()) view.showEmptyState();
 
                     DefaultTableModel model = view.getTableModelSelesai();
                     if (model != null) {
                         model.setRowCount(0);
-                        for (Object[] row : finishedList) {
-                            model.addRow(row);
-                        }
+                        for (Object[] row : finishedList) model.addRow(row);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -194,63 +189,177 @@ public class AntrianController {
         worker.execute();
     }
 
-    private void panggilPasien(int idAntrian) {
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+    private void batalkanAntrian(int idAntrian) {
+        int confirm = JOptionPane.showConfirmDialog(view,
+            "Batalkan antrian ini?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() throws Exception {
-                if (connection == null) return null;
-                
-                // 1. Update status antrian menjadi 'Dipanggil'
-                String sqlUpdate = "UPDATE antrian SET status = 'Dipanggil' WHERE id = ?";
-                try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdate)) {
-                    pstmt.setInt(1, idAntrian);
-                    pstmt.executeUpdate();
+            protected Boolean doInBackground() throws Exception {
+                if (connection == null) return false;
+                String sql = "UPDATE antrian SET status='Batal' WHERE id=?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, idAntrian);
+                    ps.executeUpdate();
                 }
-                
-                // 2. Cari detail pasien untuk direhidrasi
-                String sqlPasien = "SELECT p.id, p.nama, p.no_rm, p.alamat, p.no_telp, p.tanggal_lahir, p.golongan_darah, p.alergi " +
-                                   "FROM antrian a JOIN pasien p ON a.id_pasien = p.id " +
-                                   "WHERE a.id = ?";
-                model.Pasien pasien = null;
-                try (PreparedStatement pstmt = connection.prepareStatement(sqlPasien)) {
-                    pstmt.setInt(1, idAntrian);
-                    try (ResultSet rs = pstmt.executeQuery()) {
-                        if (rs.next()) {
-                            pasien = new model.Pasien(
-                                rs.getInt("id"),
-                                rs.getString("nama"),
-                                rs.getString("no_rm"),
-                                rs.getString("alamat"),
-                                rs.getString("no_telp"),
-                                rs.getDate("tanggal_lahir"),
-                                rs.getString("golongan_darah"),
-                                rs.getString("alergi")
-                            );
-                        }
-                    }
-                }
-                
-                // 3. Kirim notifikasi melalui model domain
-                if (pasien != null) {
-                    return pasien.kirimNotifikasi("Silakan menuju ke ruang periksa.");
-                }
-                return null;
+                return true;
             }
-            
             @Override
             protected void done() {
-                try {
-                    String notification = get();
-                    if (notification != null) {
-                        JOptionPane.showMessageDialog(view, notification, "Panggilan Pasien", JOptionPane.INFORMATION_MESSAGE);
-                    }
-                    loadData(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    loadData(true);
+                try { if (get()) loadData(true); }
+                catch (Exception e) {
+                    JOptionPane.showMessageDialog(view, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         };
         worker.execute();
+    }
+
+    private void panggilPasien(int idAntrian) {
+        SwingWorker<PasienInfo, Void> worker = new SwingWorker<>() {
+            @Override
+            protected PasienInfo doInBackground() throws Exception {
+                if (connection == null) return null;
+                // 1. Update status antrian → Dipanggil
+                String sqlUpd = "UPDATE antrian SET status='Dipanggil' WHERE id=?";
+                try (PreparedStatement ps = connection.prepareStatement(sqlUpd)) {
+                    ps.setInt(1, idAntrian);
+                    ps.executeUpdate();
+                }
+                // 2. Ambil data pasien + dokter
+                String sqlPasien =
+                    "SELECT p.id, p.nama, p.no_rm, d.nama AS nama_dokter, d.id AS id_dokter " +
+                    "FROM antrian a " +
+                    "JOIN pasien p ON a.id_pasien = p.id " +
+                    "JOIN dokter d ON a.id_dokter = d.id " +
+                    "WHERE a.id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sqlPasien)) {
+                    ps.setInt(1, idAntrian);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            return new PasienInfo(
+                                rs.getInt("id"), rs.getString("nama"),
+                                rs.getString("no_rm"), rs.getString("nama_dokter"),
+                                rs.getInt("id_dokter")
+                            );
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    PasienInfo info = get();
+                    if (info == null) return;
+                    loadData(false); // refresh kartu (status berubah ke Dipanggil)
+                    bukaKunjunganDialog(idAntrian, info);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private void bukaKunjunganDialog(int idAntrian, PasienInfo info) {
+        Window parent = SwingUtilities.getWindowAncestor(view);
+        KunjunganDialog dialog = new KunjunganDialog(
+            parent, idAntrian, info.idPasien, info.nama, info.noRM, info.namaDokter
+        );
+
+        // Tombol Input Resep — buka ResepDialog di atas KunjunganDialog
+        dialog.addInputResepListener(e -> {
+            if (idKunjunganAktif == -1) {
+                JOptionPane.showMessageDialog(dialog,
+                    "Selesaikan kunjungan dulu sebelum membuat resep.\n" +
+                    "Klik 'Selesaikan Kunjungan' terlebih dahulu.",
+                    "Info", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            ResepDialog resepDialog = new ResepDialog(dialog, idKunjunganAktif, info.nama);
+            new ResepDialogController(resepDialog, idKunjunganAktif);
+            resepDialog.setVisible(true);
+        });
+
+        // Tombol Selesaikan
+        dialog.addSelesaikanListener(e ->
+            selesaikanKunjungan(dialog, idAntrian, info, dialog.getKeluhan(), dialog.getDiagnosa())
+        );
+
+        dialog.setVisible(true);
+    }
+
+    private void selesaikanKunjungan(KunjunganDialog dialog, int idAntrian,
+                                     PasienInfo info, String keluhan, String diagnosa) {
+        SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                connection.setAutoCommit(false);
+                try {
+                    // 1. INSERT kunjungan dengan status langsung 'selesai'
+                    String sqlK =
+                        "INSERT INTO kunjungan " +
+                        "(id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa, status) " +
+                        "VALUES (?, ?, NOW(), ?, ?, 'selesai')";
+                    int idKunjungan = -1;
+                    try (PreparedStatement ps = connection.prepareStatement(sqlK, Statement.RETURN_GENERATED_KEYS)) {
+                        ps.setInt(1, info.idPasien);
+                        ps.setInt(2, info.idDokter);
+                        ps.setString(3, keluhan);
+                        ps.setString(4, diagnosa);
+                        ps.executeUpdate();
+                        try (ResultSet rs = ps.getGeneratedKeys()) {
+                            if (rs.next()) idKunjungan = rs.getInt(1);
+                        }
+                    }
+                    idKunjunganAktif = idKunjungan;
+
+                    // 2. Update antrian → Selesai
+                    String sqlA = "UPDATE antrian SET status='Selesai' WHERE id=?";
+                    try (PreparedStatement ps = connection.prepareStatement(sqlA)) {
+                        ps.setInt(1, idAntrian);
+                        ps.executeUpdate();
+                    }
+                    connection.commit();
+                    return true;
+                } catch (Exception e) {
+                    connection.rollback();
+                    throw e;
+                } finally {
+                    connection.setAutoCommit(true);
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    if (get()) {
+                        dialog.dispose();
+                        loadData(true);
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(dialog,
+                        "Gagal menyimpan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    // ---- Inner classes ----
+    private static class PasienInfo {
+        int idPasien, idDokter;
+        String nama, noRM, namaDokter;
+
+        PasienInfo(int idPasien, String nama, String noRM, String namaDokter, int idDokter) {
+            this.idPasien   = idPasien;
+            this.nama       = nama;
+            this.noRM       = noRM;
+            this.namaDokter = namaDokter;
+            this.idDokter   = idDokter;
+        }
     }
 }
