@@ -131,7 +131,8 @@ public class TagihanController {
         }
 
         currentTotalAkhir = bayar.hitungTotal();
-        view.setSubtotals(currentTarifDokter, currentTarifObat, currentTotalAkhir);
+        double potongan = currentTotalAwal - currentTotalAkhir;
+        view.setSubtotals(currentTarifDokter, currentTarifObat, potongan, currentTotalAkhir);
     }
 
     private void prosesPembayaran() {
@@ -256,7 +257,7 @@ public class TagihanController {
 
     private void resetForm() {
         view.setAutoFillData("-", "-", "-");
-        view.setSubtotals(0, 0, 0);
+        view.setSubtotals(0, 0, 0, 0);
         currentTotalAwal = 0;
         currentTotalAkhir = 0;
     }

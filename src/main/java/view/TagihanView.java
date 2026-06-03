@@ -19,6 +19,7 @@ public class TagihanView extends JPanel {
     
     private JLabel lblSubtotalKonsultasi;
     private JLabel lblSubtotalObat;
+    private JLabel lblPotongan;
     private JComboBox<String> cbJenisPembayaran;
     private JLabel lblTotalBesar;
     
@@ -134,6 +135,16 @@ public class TagihanView extends JPanel {
         lblSubtotalObat = new JLabel("Rp 0,00");
         lblSubtotalObat.setFont(new Font("Poppins", Font.PLAIN, 12));
         formPanel.add(lblSubtotalObat, gbc);
+
+        gbc.gridy++;
+        gbc.insets = new Insets(8, 8, 0, 8);
+        formPanel.add(createFormLabel("Potongan / Diskon:"), gbc);
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 8, 15, 8);
+        lblPotongan = new JLabel("Rp 0,00");
+        lblPotongan.setFont(new Font("Poppins", Font.PLAIN, 12));
+        lblPotongan.setForeground(new Color(231, 76, 60)); // Red color for discount/deduction
+        formPanel.add(lblPotongan, gbc);
 
         gbc.gridy++;
         gbc.insets = new Insets(8, 8, 0, 8);
@@ -318,9 +329,10 @@ public class TagihanView extends JPanel {
         lblAutoTanggal.setText(tgl);
     }
     
-    public void setSubtotals(double konsultasi, double obat, double totalBesar) {
+    public void setSubtotals(double konsultasi, double obat, double potongan, double totalBesar) {
         lblSubtotalKonsultasi.setText(String.format("Rp %,.2f", konsultasi));
         lblSubtotalObat.setText(String.format("Rp %,.2f", obat));
+        lblPotongan.setText(String.format("- Rp %,.2f", potongan));
         lblTotalBesar.setText(String.format("Rp %,.2f", totalBesar));
     }
 

@@ -68,7 +68,7 @@ public class AntrianView extends JPanel {
 
     private void initCenterPanel() {
         JSplitPane splitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitPaneVertical.setDividerLocation(120);
+        splitPaneVertical.setDividerLocation(170);
         splitPaneVertical.setDividerSize(0);
         splitPaneVertical.setBorder(null);
         splitPaneVertical.setOpaque(false);
@@ -134,11 +134,26 @@ public class AntrianView extends JPanel {
         add(splitPaneVertical, BorderLayout.CENTER);
     }
 
-    public void setNowServing(String namaPasien, String dokter) {
-        if (namaPasien == null || namaPasien.isEmpty()) {
+    public void setNowServing(java.util.List<controller.AntrianController.ActiveServingInfo> activeList) {
+        if (activeList == null || activeList.isEmpty()) {
             lblNowServing.setText("TIDAK ADA PASIEN DI RUANGAN");
         } else {
-            lblNowServing.setText("SEDANG DIPERIKSA: " + namaPasien + " (Ruang " + dokter + ")");
+            StringBuilder sb = new StringBuilder("<html><div style='line-height: 1.3;'>");
+            if (activeList.size() == 1) {
+                controller.AntrianController.ActiveServingInfo info = activeList.get(0);
+                sb.append("SEDANG DIPERIKSA: No. ").append(info.nomorAntrian)
+                  .append(" - ").append(info.namaPasien)
+                  .append(" (Ruang ").append(info.namaDokter).append(")");
+            } else {
+                sb.append("SEDANG DIPERIKSA:<br>");
+                for (controller.AntrianController.ActiveServingInfo info : activeList) {
+                    sb.append("&bull; No. ").append(info.nomorAntrian)
+                      .append(" - ").append(info.namaPasien)
+                      .append(" (Ruang ").append(info.namaDokter).append(")<br>");
+                }
+            }
+            sb.append("</div></html>");
+            lblNowServing.setText(sb.toString());
         }
     }
 

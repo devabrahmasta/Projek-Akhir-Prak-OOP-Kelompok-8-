@@ -92,7 +92,7 @@ public class AntrianController {
     public void loadData(boolean isManualRefresh) {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             int menunggu = 0, diperiksa = 0, selesai = 0;
-            String nowServingNama = null, nowServingDokter = null;
+            List<ActiveServingInfo> activeList = new ArrayList<>();
             List<Object[]> waitingList  = new ArrayList<>();
             List<Object[]> finishedList = new ArrayList<>();
 
@@ -141,8 +141,11 @@ public class AntrianController {
                                 });
                             } else if (status.equalsIgnoreCase("Dipanggil") || status.equalsIgnoreCase("Diperiksa")) {
                                 diperiksa++;
-                                nowServingNama   = namaPasien;
-                                nowServingDokter = namaDokter;
+                                activeList.add(new ActiveServingInfo(
+                                    rs.getInt("nomor_antrian"),
+                                    namaPasien,
+                                    namaDokter
+                                ));
                             } else if (status.equalsIgnoreCase("Selesai")) {
                                 selesai++;
                                 finishedList.add(new Object[]{noSelesai++, namaPasien, rs.getString("no_rm"), namaDokter, status});
@@ -158,7 +161,7 @@ public class AntrianController {
                 try {
                     get();
                     view.setStatCount(menunggu, diperiksa, selesai);
-                    view.setNowServing(nowServingNama, nowServingDokter);
+                    view.setNowServing(activeList);
 
                     boolean isDokter  = SessionManager.hasRole("dokter");
                     boolean isAdmin   = SessionManager.hasRole("admin");
@@ -320,6 +323,18 @@ public class AntrianController {
             this.noRM       = noRM;
             this.namaDokter = namaDokter;
             this.idDokter   = idDokter;
+        }
+    }
+
+    public static class ActiveServingInfo {
+        public final int nomorAntrian;
+        public final String namaPasien;
+        public final String namaDokter;
+
+        public ActiveServingInfo(int nomorAntrian, String namaPasien, String namaDokter) {
+            this.nomorAntrian = nomorAntrian;
+            this.namaPasien = namaPasien;
+            this.namaDokter = namaDokter;
         }
     }
 }
