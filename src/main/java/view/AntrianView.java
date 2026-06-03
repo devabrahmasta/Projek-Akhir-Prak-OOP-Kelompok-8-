@@ -328,7 +328,7 @@ public class AntrianView extends JPanel {
     
     public void setDokterList(ComboItem[] items) {
         cbFilterDokter.removeAllItems();
-        cbFilterDokter.addItem(new ComboItem(0, "Semua Dokter")); // Opsi default
+        cbFilterDokter.addItem(new ComboItem(0, "Semua Dokter")); 
         for (ComboItem item : items) {
             cbFilterDokter.addItem(item);
         }

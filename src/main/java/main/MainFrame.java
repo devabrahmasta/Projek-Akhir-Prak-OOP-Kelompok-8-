@@ -13,7 +13,7 @@ public class MainFrame extends JFrame {
     private JPanel contentPanel;
     private CardLayout cardLayout;
     
-    // Views
+    
     private DashboardView dashboardView;
     private PasienView pasienView;
     private DokterView dokterView;
@@ -23,7 +23,7 @@ public class MainFrame extends JFrame {
     private ResepMasukView resepMasukView;
     private TagihanView tagihanView;
 
-    // Controllers
+    
     private DashboardController dashboardController;
     private PasienController pasienController;
     private DokterController dokterController;
@@ -35,7 +35,7 @@ public class MainFrame extends JFrame {
 
     private StokMonitorThread stokMonitorThread;
     
-    private final Color COLOR_SURFACE = new Color(240, 246, 246); // #f0f6f6
+    private final Color COLOR_SURFACE = new Color(240, 246, 246); 
     
     public MainFrame() {
         setTitle("Sistem Manajemen Klinik - Medika Center");
@@ -46,7 +46,7 @@ public class MainFrame extends JFrame {
         initComponents();
         initMVC();
         
-        // Mulai dari halaman default berdasarkan role
+        
         String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         if (role.equals("apoteker")) {
             switchPanel("OBAT");
@@ -72,7 +72,7 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
         
-        // --- SIDEBAR DINAMIS ---
+        
         sidebar = new SidebarMenuView();
         String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         String name = SessionManager.isLoggedIn() ? SessionManager.getUser().getNama() : "User";
@@ -85,7 +85,7 @@ public class MainFrame extends JFrame {
         contentPanel.setBackground(COLOR_SURFACE);
         add(contentPanel, BorderLayout.CENTER);
         
-        // Bind action listeners ke dynamic sidebar buttons
+        
         if (sidebar.getBtnDashboard() != null) sidebar.getBtnDashboard().addActionListener(e -> switchPanel("DASHBOARD"));
         if (sidebar.getBtnPasien() != null) sidebar.getBtnPasien().addActionListener(e -> switchPanel("PASIEN"));
         if (sidebar.getBtnDokter() != null) sidebar.getBtnDokter().addActionListener(e -> switchPanel("DOKTER"));
@@ -118,7 +118,7 @@ public class MainFrame extends JFrame {
         String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         
         if (role.equals("admin")) {
-            // Instansiasi SEMUA modul untuk Admin
+            
             dashboardView = new DashboardView();
             contentPanel.add(dashboardView, "DASHBOARD");
             dashboardController = new DashboardController(dashboardView);
@@ -155,7 +155,7 @@ public class MainFrame extends JFrame {
             stokMonitorThread.start();
 
         } else if (role.equals("resepsionis")) {
-            // Instansiasi Modul Khusus Resepsionis
+            
             dashboardView = new DashboardView();
             contentPanel.add(dashboardView, "DASHBOARD");
             dashboardController = new DashboardController(dashboardView);
@@ -181,7 +181,7 @@ public class MainFrame extends JFrame {
             tagihanController = new TagihanController(tagihanView);
             
         } else if (role.equals("dokter")) {
-            // Instansiasi Modul Khusus Dokter
+            
             antrianView = new AntrianView();
             contentPanel.add(antrianView, "ANTRIAN");
             antrianController = new AntrianController(antrianView);
@@ -191,7 +191,7 @@ public class MainFrame extends JFrame {
             kunjunganController = new KunjunganController(kunjunganView);
 
         } else if (role.equals("apoteker")) {
-            // Instansiasi Modul Khusus Apoteker
+            
             obatView = new ObatView();
             contentPanel.add(obatView, "OBAT");
             obatController = new ObatController(obatView);
@@ -204,7 +204,7 @@ public class MainFrame extends JFrame {
             stokMonitorThread.start();
         }
 
-        // Hubungkan AntrianController → KunjunganController via callback (tanpa popup)
+        
         if (antrianController != null && kunjunganController != null) {
             final KunjunganController kc = kunjunganController;
             antrianController.setOnPanggilListener(info -> {
@@ -226,7 +226,7 @@ public class MainFrame extends JFrame {
     private void switchPanel(String cardName) {
         if (cardLayout == null || contentPanel == null) return;
         
-        // Pintu gerbang defensif: cek apakah view tujuan sudah diinstansiasi
+        
         boolean exists = false;
         if ("DASHBOARD".equals(cardName) && dashboardView != null) exists = true;
         else if ("PASIEN".equals(cardName) && pasienView != null) exists = true;
@@ -237,14 +237,14 @@ public class MainFrame extends JFrame {
         else if ("RESEP_MASUK".equals(cardName) && resepMasukView != null) exists = true;
         else if ("TAGIHAN".equals(cardName) && tagihanView != null) exists = true;
         
-        if (!exists) return; // Mengabaikan perpindahan jika view null untuk role tersebut
+        if (!exists) return; 
         
         cardLayout.show(contentPanel, cardName);
         if (sidebar != null) {
             sidebar.setMenuAktif(cardName);
         }
         
-        // Refresh data secara aman dengan defensive null-check
+        
         if ("DASHBOARD".equals(cardName)) {
             if (dashboardController != null) dashboardController.loadData();
         } else if ("PASIEN".equals(cardName)) {

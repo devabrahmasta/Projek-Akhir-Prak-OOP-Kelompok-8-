@@ -220,16 +220,50 @@ public class AntrianController {
 
     private void panggilPasien(int idAntrian) {
         SwingWorker<PasienInfo, Void> worker = new SwingWorker<>() {
+            private String activePatientName = null;
+            private String targetDoctorName = null;
+
             @Override
             protected PasienInfo doInBackground() throws Exception {
                 if (connection == null) return null;
-                // 1. Update status antrian → Dipanggil
+                
+                // 1. Get the doctor details for this queue item
+                int targetDocId = -1;
+                String sqlDoc = "SELECT d.id, d.nama FROM antrian a JOIN dokter d ON a.id_dokter = d.id WHERE a.id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sqlDoc)) {
+                    ps.setInt(1, idAntrian);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            targetDocId = rs.getInt("id");
+                            targetDoctorName = rs.getString("nama");
+                        }
+                    }
+                }
+                
+                if (targetDocId == -1) return null;
+                
+                // 2. Check if this doctor already has a patient with status 'Dipanggil' or 'Diperiksa' today
+                String sqlCheck = 
+                    "SELECT p.nama FROM antrian a " +
+                    "JOIN pasien p ON a.id_pasien = p.id " +
+                    "WHERE a.id_dokter = ? AND a.status IN ('Dipanggil', 'Diperiksa') " +
+                    "AND a.tanggal = CURRENT_DATE LIMIT 1";
+                try (PreparedStatement ps = connection.prepareStatement(sqlCheck)) {
+                    ps.setInt(1, targetDocId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            activePatientName = rs.getString("nama");
+                            return null;
+                        }
+                    }
+                }
+                
                 String sqlUpd = "UPDATE antrian SET status='Dipanggil' WHERE id=?";
                 try (PreparedStatement ps = connection.prepareStatement(sqlUpd)) {
                     ps.setInt(1, idAntrian);
                     ps.executeUpdate();
                 }
-                // 2. Ambil data pasien + dokter
+                
                 String sqlPasien =
                     "SELECT p.id, p.nama, p.no_rm, d.nama AS nama_dokter, d.id AS id_dokter " +
                     "FROM antrian a " +
@@ -254,9 +288,16 @@ public class AntrianController {
             @Override
             protected void done() {
                 try {
+                    if (activePatientName != null) {
+                        JOptionPane.showMessageDialog(view, 
+                            "Dokter " + targetDoctorName + " masih memiliki pasien yang sedang diperiksa: " + activePatientName + ".\n" +
+                            "Selesaikan kunjungan pasien tersebut terlebih dahulu sebelum memanggil pasien baru.", 
+                            "Peringatan", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     PasienInfo info = get();
                     if (info == null) return;
-                    loadData(false); // refresh kartu (status berubah ke Dipanggil)
+                    loadData(false); 
                     if (onPanggilListener != null) {
                         onPanggilListener.accept(info);
                     }
@@ -268,7 +309,7 @@ public class AntrianController {
         worker.execute();
     }
 
-    // ---- Inner classes ----
+    
     public static class PasienInfo {
         public int idPasien, idDokter;
         public String nama, noRM, namaDokter;

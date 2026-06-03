@@ -10,7 +10,7 @@ import java.awt.event.MouseAdapter;
 
 public class ObatView extends JPanel {
     
-    // Panel Kiri - Form
+    
     private JTextField txtKodeObat;
     private JTextField txtNamaObat;
     private JComboBox<String> cbKategori;
@@ -26,11 +26,11 @@ public class ObatView extends JPanel {
     
     private JLabel lblStatus;
     
-    // Panel Kanan - Tabel
+    
     private JTable tabelObat;
     private DefaultTableModel tabelModel;
     
-    // --- COLOR PALETTE MODERN ---
+    
     private final Color COLOR_BG = new Color(240, 246, 246);
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
@@ -68,9 +68,9 @@ public class ObatView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
         
-        // ==========================================
-        // PANEL KIRI: Form Obat
-        // ==========================================
+        
+        
+        
         JPanel formWrapper = createRoundedWrapper();
         
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -96,7 +96,7 @@ public class ObatView extends JPanel {
         gbc.gridy++;
         txtKodeObat = new JTextField();
         styleTextField(txtKodeObat);
-        txtKodeObat.setEditable(false); // Auto-generate / read-only by default
+        txtKodeObat.setEditable(false); 
         txtKodeObat.setBackground(new Color(245, 245, 245));
         formPanel.add(txtKodeObat, gbc);
         
@@ -128,7 +128,7 @@ public class ObatView extends JPanel {
         String[] satuanArr = {"Tablet", "Kapsul", "Botol", "Sachet", "Ampul"};
         cbSatuan = new JComboBox<>(satuanArr);
         styleComboBox(cbSatuan);
-        cbSatuan.setEditable(true); // Memungkinkan input teks bebas jika satuan tidak ada di daftar
+        cbSatuan.setEditable(true); 
         formPanel.add(cbSatuan, gbc);
         
         gbc.gridy++;
@@ -187,9 +187,9 @@ public class ObatView extends JPanel {
         
         formWrapper.add(formScrollPane, BorderLayout.CENTER);
         
-        // ==========================================
-        // PANEL KANAN: Tabel Obat
-        // ==========================================
+        
+        
+        
         JPanel tableWrapper = createRoundedWrapper();
         
         JPanel topTablePanel = new JPanel(new BorderLayout());
@@ -237,7 +237,7 @@ public class ObatView extends JPanel {
         setButtonsState(false);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -357,13 +357,13 @@ public class ObatView extends JPanel {
         table.setSelectionForeground(Color.WHITE);
         
         JTableHeader header = table.getTableHeader();
-        header.setBackground(new Color(245, 245, 245)); // #f5f5f5 header
+        header.setBackground(new Color(245, 245, 245)); 
         header.setForeground(COLOR_TEXT);
         header.setFont(new Font("Poppins", Font.BOLD, 12));
         header.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
         header.setPreferredSize(new Dimension(header.getWidth(), 35));
         
-        // Custom Renderer for Row and Status logic
+        
         DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -375,7 +375,7 @@ public class ObatView extends JPanel {
                     
                     boolean isKritis = (stok <= stokMin);
                     
-                    // Modifikasi tampilan teks Status jika dikelola oleh model (namun renderer tetap memastikan warna)
+                    
                     if (column == 7) {
                         setText(isKritis ? "Kritis" : "Aman");
                         setFont(new Font("Poppins", Font.BOLD, 12));
@@ -383,18 +383,18 @@ public class ObatView extends JPanel {
                     
                     if (!isSelected) {
                         if (isKritis) {
-                            c.setBackground(new Color(255, 240, 240)); // #fff0f0 merah muda
+                            c.setBackground(new Color(255, 240, 240)); 
                         } else {
-                            c.setBackground(COLOR_CARD); // Normal row background
+                            c.setBackground(COLOR_CARD); 
                         }
                         
                         if (column == 7) {
-                            c.setForeground(isKritis ? Color.RED : new Color(39, 174, 96)); // Merah atau Hijau
+                            c.setForeground(isKritis ? Color.RED : new Color(39, 174, 96)); 
                         } else {
                             c.setForeground(COLOR_TEXT);
                         }
                     } else {
-                        // Jika baris sedang di-select
+                        
                         c.setBackground(COLOR_PRIMARY);
                         c.setForeground(Color.WHITE);
                     }
@@ -414,11 +414,11 @@ public class ObatView extends JPanel {
         }
     }
     
-    // --- METODE BAWAAN VIEW ---
+    
     
     public void setFormEnabled(boolean enabled) {
-        // txtKodeObat selalu readonly kecuali butuh diketik (misal pas tambah).
-        // Sesuai deskripsi: auto-generate, read only saat tambah baru.
+        
+        
         txtNamaObat.setEnabled(enabled);
         cbKategori.setEnabled(enabled);
         txtStok.setEnabled(enabled);
@@ -447,7 +447,7 @@ public class ObatView extends JPanel {
         btnBatal.setEnabled(isEditing || hasSelection);
     }
     
-    // --- GETTERS & SETTERS ---
+    
     
     public String getKodeObatInput() { return txtKodeObat.getText().trim(); }
     public void setKodeObatInput(String text) { txtKodeObat.setText(text); }
@@ -483,7 +483,7 @@ public class ObatView extends JPanel {
         return null;
     }
     
-    // --- LISTENERS ---
+    
     
     public void addTambahListener(ActionListener l) { btnTambah.addActionListener(l); }
     public void addSimpanListener(ActionListener l) { btnSimpan.addActionListener(l); }

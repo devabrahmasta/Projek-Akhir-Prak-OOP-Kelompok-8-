@@ -10,7 +10,7 @@ import java.awt.event.MouseAdapter;
 
 public class ResepView extends JPanel {
     
-    // Panel Kiri - Form
+    
     private JLabel lblKunjungan;
     private JComboBox<ComboItem> cbObat;
     private JTextField txtJumlah;
@@ -23,14 +23,14 @@ public class ResepView extends JPanel {
     private JButton btnSimpanResep;
     private JButton btnBatal;
     
-    // Panel Kanan - Riwayat
+    
     private JTable tabelRiwayatResep;
     private DefaultTableModel tabelRiwayatModel;
     
-    // Status
+    
     private JLabel lblStatus;
     
-    // --- COLOR PALETTE MODERN ---
+    
     private final Color COLOR_BG = new Color(240, 246, 246);
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
@@ -68,14 +68,14 @@ public class ResepView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
         
-        // ==========================================
-        // PANEL KIRI: Form Resep & Tabel Detail
-        // ==========================================
+        
+        
+        
         JPanel formWrapper = createRoundedWrapper();
         JPanel leftPanel = new JPanel(new BorderLayout(0, 15));
         leftPanel.setOpaque(false);
         
-        // 1. Bagian Atas: Form Input
+        
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(COLOR_CARD);
         
@@ -134,7 +134,7 @@ public class ResepView extends JPanel {
         styleRoundedButton(btnTambahItem, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
         formPanel.add(btnTambahItem, gbc);
         
-        // 2. Bagian Tengah: Tabel Detail Resep (Item Obat)
+        
         JPanel detailWrapper = new JPanel(new BorderLayout(0, 5));
         detailWrapper.setOpaque(false);
         
@@ -153,7 +153,7 @@ public class ResepView extends JPanel {
         tabelDetailResep = new JTable(tabelDetailModel);
         styleTable(tabelDetailResep);
         
-        // Hide ID Obat column for internal use
+        
         tabelDetailResep.getColumnModel().getColumn(0).setMinWidth(0);
         tabelDetailResep.getColumnModel().getColumn(0).setMaxWidth(0);
         tabelDetailResep.getColumnModel().getColumn(0).setWidth(0);
@@ -164,7 +164,7 @@ public class ResepView extends JPanel {
         scrollDetail.setPreferredSize(new Dimension(0, 150));
         detailWrapper.add(scrollDetail, BorderLayout.CENTER);
         
-        // 3. Bagian Bawah: Tombol Simpan & Batal
+        
         JPanel bottomPanel = new JPanel(new GridLayout(1, 2, 10, 0));
         bottomPanel.setOpaque(false);
         
@@ -177,16 +177,16 @@ public class ResepView extends JPanel {
         bottomPanel.add(btnSimpanResep);
         bottomPanel.add(btnBatal);
         
-        // Susun Left Panel
+        
         leftPanel.add(formPanel, BorderLayout.NORTH);
         leftPanel.add(detailWrapper, BorderLayout.CENTER);
         leftPanel.add(bottomPanel, BorderLayout.SOUTH);
         
         formWrapper.add(leftPanel, BorderLayout.CENTER);
         
-        // ==========================================
-        // PANEL KANAN: Tabel Riwayat Resep
-        // ==========================================
+        
+        
+        
         JPanel rightWrapper = createRoundedWrapper();
         
         JPanel topTablePanel = new JPanel(new BorderLayout());
@@ -225,7 +225,7 @@ public class ResepView extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -357,7 +357,7 @@ public class ResepView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // --- GETTERS & SETTERS ---
+    
     
     public void setLblKunjungan(String text) {
         lblKunjungan.setText(text);
@@ -418,7 +418,7 @@ public class ResepView extends JPanel {
         return tabelRiwayatResep.getSelectedRow();
     }
     
-    // --- LISTENERS ---
+    
     
     public void addBtnTambahItemListener(ActionListener l) {
         btnTambahItem.addActionListener(l);

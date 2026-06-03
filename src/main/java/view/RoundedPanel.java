@@ -28,11 +28,11 @@ public class RoundedPanel extends JPanel {
         Graphics2D graphics = (Graphics2D) g;
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Menggambar shadow tipis (opsional, untuk efek modern)
+        
         graphics.setColor(new Color(0, 0, 0, 10));
         graphics.fillRoundRect(2, 2, width - 4, height - 4, arcs.width, arcs.height);
 
-        // Menggambar panel utama
+        
         if (backgroundColor != null) {
             graphics.setColor(backgroundColor);
         } else {

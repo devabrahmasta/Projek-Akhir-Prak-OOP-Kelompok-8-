@@ -17,12 +17,12 @@ public class KunjunganController {
     private final KunjunganView view;
     private final Connection connection;
 
-    // State kunjungan aktif (diisi dari autoFillFromAntrian)
+    
     private int activeIdPasien   = -1;
     private int activeIdDokter   = -1;
     private String activeNoRM    = "";
     private String namaPasienAktif = "";
-    private int idKunjunganAktif = -1;  // -1 = belum di-INSERT
+    private int idKunjunganAktif = -1;  
 
     private Runnable onSelesaiListener;
 
@@ -55,21 +55,21 @@ public class KunjunganController {
         });
     }
 
-    // ---- Called from MainFrame after Panggil in AntrianView ----
+    
     public void autoFillFromAntrian(int idPasien, String namaPasien,
                                      String noRM, String namaDokter, int idDokter) {
         this.activeIdPasien   = idPasien;
         this.activeIdDokter   = idDokter;
         this.activeNoRM       = noRM;
         this.namaPasienAktif  = namaPasien;
-        this.idKunjunganAktif = -1;  // reset — kunjungan baru
+        this.idKunjunganAktif = -1;  
 
         view.setFormAutoFilled(namaPasien, noRM, namaDokter);
         view.setFormEnabled(true);
-        view.setSelesaikanEnabled(false);  // aktif setelah keluhan+diagnosa diisi
+        view.setSelesaikanEnabled(false);  
     }
 
-    // ---- Perubahan 5: Input Resep ----
+    
     private void handleInputResep() {
         if (activeIdPasien == -1) {
             JOptionPane.showMessageDialog(view,
@@ -79,7 +79,7 @@ public class KunjunganController {
         }
 
         if (idKunjunganAktif == -1) {
-            // INSERT kunjungan dulu dengan status 'sedang_diperiksa'
+            
             String keluhan  = view.getKeluhanInput();
             String diagnosa = view.getDiagnosaInput();
             SwingWorker<Integer, Void> worker = new SwingWorker<>() {
@@ -130,7 +130,7 @@ public class KunjunganController {
         resepDialog.setVisible(true);
     }
 
-    // ---- Perubahan 7: Selesaikan ----
+    
     private void handleSelesaikan() {
         if (activeIdPasien == -1) {
             JOptionPane.showMessageDialog(view, "Tidak ada kunjungan aktif!", "Peringatan", JOptionPane.WARNING_MESSAGE);
@@ -155,7 +155,7 @@ public class KunjunganController {
                 connection.setAutoCommit(false);
                 try {
                     if (finalIdKunjunganAktif == -1) {
-                        // Belum di-INSERT: INSERT langsung dengan status 'selesai'
+                        
                         String sqlK =
                             "INSERT INTO kunjungan " +
                             "(id_pasien, id_dokter, tanggal_kunjungan, keluhan, diagnosa, status) " +
@@ -168,7 +168,7 @@ public class KunjunganController {
                             ps.executeUpdate();
                         }
                     } else {
-                        // Sudah di-INSERT (via Input Resep): UPDATE keluhan, diagnosa, status
+                        
                         String sqlK = "UPDATE kunjungan SET keluhan=?, diagnosa=?, status='selesai' WHERE id=?";
                         try (PreparedStatement ps = connection.prepareStatement(sqlK)) {
                             ps.setString(1, keluhan);
@@ -178,7 +178,7 @@ public class KunjunganController {
                         }
                     }
 
-                    // Update antrian → Selesai
+                    
                     String sqlA =
                         "UPDATE antrian SET status='Selesai' " +
                         "WHERE id_pasien=? AND id_dokter=? AND DATE(tanggal)=CURRENT_DATE " +
@@ -206,13 +206,13 @@ public class KunjunganController {
                         JOptionPane.showMessageDialog(view,
                             "Kunjungan selesai! Tagihan bisa dibuat oleh resepsionis.",
                             "Sukses", JOptionPane.INFORMATION_MESSAGE);
-                        // Reset state
+                        
                         activeIdPasien   = -1;
                         activeIdDokter   = -1;
                         activeNoRM       = "";
                         namaPasienAktif  = "";
                         idKunjunganAktif = -1;
-                        // Reset view
+                        
                         view.clearForm();
                         view.setFormEnabled(false);
                         view.setSelesaikanEnabled(false);
@@ -230,7 +230,7 @@ public class KunjunganController {
         worker.execute();
     }
 
-    // ---- Data loading ----
+    
     private String getSortSql(String sortOption) {
         String filter = "";
         String order  = " GROUP BY k.id ORDER BY k.tanggal_kunjungan DESC, k.id DESC";
@@ -261,6 +261,7 @@ public class KunjunganController {
 
     public void loadData() {
         view.setStatusText("Memuat riwayat kunjungan...");
+        checkActiveKunjungan();
 
         SwingWorker<List<Object[]>, Void> worker = new SwingWorker<>() {
             @Override
@@ -402,6 +403,124 @@ public class KunjunganController {
             String waktu  = view.getTable().getModel().getValueAt(row, 3).toString();
             String status = view.getTable().getModel().getValueAt(row, 7).toString();
             view.setStatusText("Dipilih: " + pasien + " | " + dokter + " | " + waktu + " | Status: " + status);
+        }
+    }
+
+    public void checkActiveKunjungan() {
+        if (!SessionManager.hasRole("dokter")) return;
+        
+        SwingWorker<ActiveKunjunganInfo, Void> worker = new SwingWorker<>() {
+            @Override
+            protected ActiveKunjunganInfo doInBackground() throws Exception {
+                int docId = resolveDokterId();
+                if (docId == -1) return null;
+                
+                String sqlAntrian = 
+                    "SELECT a.id_pasien, p.nama AS nama_pasien, p.no_rm, d.nama AS nama_dokter " +
+                    "FROM antrian a " +
+                    "JOIN pasien p ON a.id_pasien = p.id " +
+                    "JOIN dokter d ON a.id_dokter = d.id " +
+                    "WHERE a.id_dokter = ? AND a.status IN ('Dipanggil', 'Diperiksa') " +
+                    "AND a.tanggal = CURRENT_DATE LIMIT 1";
+                
+                try (PreparedStatement ps = connection.prepareStatement(sqlAntrian)) {
+                    ps.setInt(1, docId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            int idPasien = rs.getInt("id_pasien");
+                            String namaPasien = rs.getString("nama_pasien");
+                            String noRM = rs.getString("no_rm");
+                            String namaDokter = rs.getString("nama_dokter");
+                            
+                            String sqlKunjungan = 
+                                "SELECT id, keluhan, diagnosa " +
+                                "FROM kunjungan " +
+                                "WHERE id_pasien = ? AND id_dokter = ? AND status = 'sedang_diperiksa' " +
+                                "AND DATE(tanggal_kunjungan) = CURRENT_DATE LIMIT 1";
+                            
+                            try (PreparedStatement psK = connection.prepareStatement(sqlKunjungan)) {
+                                psK.setInt(1, idPasien);
+                                psK.setInt(2, docId);
+                                try (ResultSet rsK = psK.executeQuery()) {
+                                    if (rsK.next()) {
+                                        return new ActiveKunjunganInfo(
+                                            rsK.getInt("id"), idPasien, docId, namaPasien, noRM, namaDokter,
+                                            rsK.getString("keluhan"), rsK.getString("diagnosa")
+                                        );
+                                    } else {
+                                        return new ActiveKunjunganInfo(
+                                            -1, idPasien, docId, namaPasien, noRM, namaDokter,
+                                            "", ""
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            
+            @Override
+            protected void done() {
+                try {
+                    ActiveKunjunganInfo info = get();
+                    if (info != null) {
+                        boolean isSamePatient = (activeIdPasien == info.idPasien && activeIdDokter == info.idDokter);
+                        
+                        activeIdPasien = info.idPasien;
+                        activeIdDokter = info.idDokter;
+                        activeNoRM = info.noRM;
+                        namaPasienAktif = info.namaPasien;
+                        idKunjunganAktif = info.idKunjungan;
+                        
+                        if (!isSamePatient) {
+                            view.setFormAutoFilled(info.namaPasien, info.noRM, info.namaDokter);
+                            view.setFormEnabled(true);
+                            view.setKeluhanAndDiagnosa(info.keluhan, info.diagnosa);
+                        } else {
+                            view.setFormEnabled(true);
+                        }
+                        
+                        boolean ready = !view.getKeluhanInput().isEmpty() && !view.getDiagnosaInput().isEmpty();
+                        view.setSelesaikanEnabled(ready);
+                    } else {
+                        activeIdPasien = -1;
+                        activeIdDokter = -1;
+                        activeNoRM = "";
+                        namaPasienAktif = "";
+                        idKunjunganAktif = -1;
+                        view.clearForm();
+                        view.setFormEnabled(false);
+                        view.setSelesaikanEnabled(false);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private static class ActiveKunjunganInfo {
+        int idKunjungan;
+        int idPasien;
+        int idDokter;
+        String namaPasien;
+        String noRM;
+        String namaDokter;
+        String keluhan;
+        String diagnosa;
+        
+        ActiveKunjunganInfo(int idKunjungan, int idPasien, int idDokter, String namaPasien, String noRM, String namaDokter, String keluhan, String diagnosa) {
+            this.idKunjungan = idKunjungan;
+            this.idPasien = idPasien;
+            this.idDokter = idDokter;
+            this.namaPasien = namaPasien;
+            this.noRM = noRM;
+            this.namaDokter = namaDokter;
+            this.keluhan = keluhan;
+            this.diagnosa = diagnosa;
         }
     }
 }

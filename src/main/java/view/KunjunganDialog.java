@@ -38,7 +38,7 @@ public class KunjunganDialog extends JDialog {
         mainPanel.setBackground(COLOR_BG);
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // ---- HEADER CARD ----
+        
         JPanel headerCard = createCard();
         headerCard.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         headerCard.setLayout(new BoxLayout(headerCard, BoxLayout.Y_AXIS));
@@ -69,7 +69,7 @@ public class KunjunganDialog extends JDialog {
         mainPanel.add(headerCard);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        // ---- FORM CARD ----
+        
         JPanel formCard = createCard();
         formCard.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         formCard.setLayout(new BoxLayout(formCard, BoxLayout.Y_AXIS));
@@ -99,7 +99,7 @@ public class KunjunganDialog extends JDialog {
         mainPanel.add(formCard);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 12)));
 
-        // ---- TOMBOL ----
+        
         JPanel btnRow = new JPanel(new GridLayout(1, 2, 10, 0));
         btnRow.setOpaque(false);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -121,7 +121,7 @@ public class KunjunganDialog extends JDialog {
         scroll.getViewport().setBackground(COLOR_BG);
         add(scroll, BorderLayout.CENTER);
 
-        // Enable/disable Selesaikan based on field content
+        
         DocumentListener dl = new DocumentListener() {
             public void insertUpdate(DocumentEvent e)  { checkFields(); }
             public void removeUpdate(DocumentEvent e)  { checkFields(); }

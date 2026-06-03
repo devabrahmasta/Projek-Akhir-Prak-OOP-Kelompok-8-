@@ -38,7 +38,7 @@ public class ResepController {
             public void mouseClicked(MouseEvent e) {
                 int col = view.getTabelDetailResep().columnAtPoint(e.getPoint());
                 int row = view.getTabelDetailResep().rowAtPoint(e.getPoint());
-                if (row != -1 && col == 4) { // Kolom Aksi (Hapus)
+                if (row != -1 && col == 4) { 
                     view.getTabelDetailModel().removeRow(row);
                 }
             }
@@ -238,7 +238,7 @@ public class ResepController {
             return;
         }
 
-        // Cek duplikasi di tabel
+        
         DefaultTableModel model = view.getTabelDetailModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             int idExisting = (int) model.getValueAt(i, 0);
@@ -264,13 +264,13 @@ public class ResepController {
             return;
         }
 
-        // Ambil data item dari tabel
+        
         List<Object[]> itemsToSave = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {
             itemsToSave.add(new Object[]{
-                model.getValueAt(i, 0), // id obat
-                model.getValueAt(i, 2), // jumlah
-                model.getValueAt(i, 3)  // dosis
+                model.getValueAt(i, 0), 
+                model.getValueAt(i, 2), 
+                model.getValueAt(i, 3)  
             });
         }
 
@@ -284,7 +284,7 @@ public class ResepController {
                 
                 connection.setAutoCommit(false);
                 try {
-                    // Jika resep belum ada, buat baru
+                    
                     if (activeResepId == -1) {
                         String sqlInsertResep = "INSERT INTO resep (id_kunjungan, tanggal, status) VALUES (?, ?, ?)";
                         try (PreparedStatement pst = connection.prepareStatement(sqlInsertResep, Statement.RETURN_GENERATED_KEYS)) {
@@ -300,7 +300,7 @@ public class ResepController {
                             }
                         }
                     } else {
-                        // Jika sudah ada, hapus detail lama
+                        
                         String sqlDeleteDetail = "DELETE FROM detail_resep WHERE id_resep = ?";
                         try (PreparedStatement pst = connection.prepareStatement(sqlDeleteDetail)) {
                             pst.setInt(1, activeResepId);
@@ -308,7 +308,7 @@ public class ResepController {
                         }
                     }
 
-                    // Insert detail resep baru
+                    
                     String sqlInsertDetail = "INSERT INTO detail_resep (id_resep, id_obat, jumlah, dosis) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement pst = connection.prepareStatement(sqlInsertDetail)) {
                         for (Object[] item : itemsToSave) {

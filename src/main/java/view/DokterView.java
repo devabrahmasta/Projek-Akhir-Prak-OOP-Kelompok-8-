@@ -29,10 +29,10 @@ public class DokterView extends JPanel {
     private JPanel formWrapper;
     private JLabel pageTitleLabel;
     
-    // --- COLOR PALETTE MODERN ---
-    private final Color COLOR_BG = new Color(240, 246, 246); // Surface
+    
+    private final Color COLOR_BG = new Color(240, 246, 246); 
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // Tosca
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
     private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); 
     private final Color COLOR_TEXT = new Color(51, 51, 51); 
     private final Color COLOR_TEXT_MUTED = new Color(130, 140, 145);
@@ -67,7 +67,7 @@ public class DokterView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
 
-        // --- PANEL KIRI (FORM) ---
+        
         formWrapper = createRoundedWrapper();
         
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -89,19 +89,19 @@ public class DokterView extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
         
-        // Input ID Dokter (Read Only)
+        
         formPanel.add(createFormLabel("ID Dokter (Otomatis):"), gbc);
         gbc.gridy++;
         txtId = new JTextField();
         styleTextField(txtId);
         txtId.setEditable(false);
         txtId.setFocusable(false);
-        txtId.setBackground(new Color(245, 245, 245)); // Visual disabled
+        txtId.setBackground(new Color(245, 245, 245)); 
         formPanel.add(txtId, gbc);
         
         gbc.gridy++;
         
-        // Input Nama
+        
         formPanel.add(createFormLabel("Nama Lengkap:"), gbc);
         gbc.gridy++;
         txtNama = new JTextField();
@@ -110,7 +110,7 @@ public class DokterView extends JPanel {
         
         gbc.gridy++;
         
-        // Input Spesialisasi
+        
         formPanel.add(createFormLabel("Spesialisasi:"), gbc);
         gbc.gridy++;
         txtSpesialisasi = new JTextField();
@@ -120,7 +120,7 @@ public class DokterView extends JPanel {
         gbc.gridy++;
         gbc.insets = new Insets(20, 8, 8, 8);
         
-        // Tombol Aksi
+        
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         buttonPanel.setBackground(COLOR_CARD);
         
@@ -142,7 +142,7 @@ public class DokterView extends JPanel {
         buttonPanel.add(btnRefresh);
         formPanel.add(buttonPanel, gbc);
         
-        // Spacer agar form ke atas
+        
         gbc.gridy++;
         gbc.weighty = 1.0;
         formPanel.add(Box.createVerticalGlue(), gbc);
@@ -154,20 +154,20 @@ public class DokterView extends JPanel {
         
         formWrapper.add(formScrollPane, BorderLayout.CENTER);
         
-        // --- PANEL KANAN (TABEL) ---
+        
         JPanel tableWrapper = createRoundedWrapper();
 
         JPanel tableNorthPanel = new JPanel();
         tableNorthPanel.setLayout(new BoxLayout(tableNorthPanel, BoxLayout.Y_AXIS));
         tableNorthPanel.setOpaque(false);
 
-        // JLabel tableTitle = new JLabel("Daftar Dokter Terdaftar");
-        // tableTitle.setFont(new Font("Poppins", Font.BOLD, 16));
-        // tableTitle.setForeground(COLOR_TEXT);
-        // tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
-        // tableNorthPanel.add(tableTitle);
+        
+        
+        
+        
+        
 
-        // Search bar
+        
         JPanel searchRow = new JPanel(new BorderLayout(8, 0));
         searchRow.setOpaque(false);
         searchRow.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
@@ -197,7 +197,7 @@ public class DokterView extends JPanel {
         table = new JTable(tableModel);
         styleTable(table);
         
-        // Listener mandiri agar Hapus & Ubah otomatis menyala saat baris diklik
+        
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -209,7 +209,7 @@ public class DokterView extends JPanel {
             }
         });
 
-        // Sembunyikan kolom ID secara visual
+        
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
@@ -223,12 +223,12 @@ public class DokterView extends JPanel {
         splitPane.setRightComponent(tableWrapper);
         add(splitPane, BorderLayout.CENTER);
         
-        // Inisialisasi State Awal
+        
         btnUbah.setEnabled(false);
         btnHapus.setEnabled(false);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -353,7 +353,7 @@ public class DokterView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // --- GETTER ASLI UNTUK DOKTER CONTROLLER ---
+    
     
     public JTable getTable() { return table; }
     public JTextField getTxtId() { return txtId; }

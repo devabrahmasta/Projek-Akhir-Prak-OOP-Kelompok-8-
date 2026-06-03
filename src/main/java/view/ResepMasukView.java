@@ -11,13 +11,13 @@ import java.util.List;
 
 public class ResepMasukView extends JPanel {
     
-    // Panel Kiri - Daftar Resep
+    
     private JList<Object> listResep;
     private DefaultListModel<Object> listResepModel;
     private JButton btnKonfirmasi;
     private JButton btnRefresh;
     
-    // Panel Kanan - Detail Resep
+    
     private JLabel lblNoResep;
     private JLabel lblPasien;
     private JLabel lblDokter;
@@ -27,7 +27,7 @@ public class ResepMasukView extends JPanel {
     private JTable tabelDetail;
     private DefaultTableModel tabelDetailModel;
     
-    // --- COLOR PALETTE MODERN ---
+    
     private final Color COLOR_BG = new Color(240, 246, 246);
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
@@ -55,7 +55,7 @@ public class ResepMasukView extends JPanel {
         headerPanel.add(titleLabel, BorderLayout.WEST);
         
         btnRefresh = new JButton("Refresh Data");
-        styleRoundedButton(btnRefresh, COLOR_PRIMARY, COLOR_PRIMARY_HOVER); // Biru
+        styleRoundedButton(btnRefresh, COLOR_PRIMARY, COLOR_PRIMARY_HOVER); 
         headerPanel.add(btnRefresh, BorderLayout.EAST);
         
         add(headerPanel, BorderLayout.NORTH);
@@ -68,9 +68,9 @@ public class ResepMasukView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
         
-        // ==========================================
-        // PANEL KIRI: Daftar Resep Pending
-        // ==========================================
+        
+        
+        
         JPanel leftWrapper = createRoundedWrapper();
         
         JPanel leftPanel = new JPanel(new BorderLayout(0, 15));
@@ -118,14 +118,14 @@ public class ResepMasukView extends JPanel {
         
         leftWrapper.add(leftPanel, BorderLayout.CENTER);
         
-        // ==========================================
-        // PANEL KANAN: Detail Resep
-        // ==========================================
+        
+        
+        
         JPanel rightWrapper = createRoundedWrapper();
         JPanel rightPanel = new JPanel(new BorderLayout(0, 15));
         rightPanel.setOpaque(false);
         
-        // 1. Info Header Resep
+        
         JPanel infoWrapper = new JPanel(new BorderLayout());
         infoWrapper.setOpaque(false);
         
@@ -172,7 +172,7 @@ public class ResepMasukView extends JPanel {
         
         rightPanel.add(infoWrapper, BorderLayout.NORTH);
         
-        // 2. Tabel Detail Obat
+        
         String[] columns = {"Nama Obat", "Jumlah", "Satuan", "Dosis"};
         tabelDetailModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -195,7 +195,7 @@ public class ResepMasukView extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -309,7 +309,7 @@ public class ResepMasukView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // --- GETTERS & SETTERS ---
+    
     
     public void setDaftarResep(List<?> items) {
         listResepModel.clear();
@@ -343,11 +343,11 @@ public class ResepMasukView extends JPanel {
         
         if (isSiap) {
             lblStatusResep.setText("Sudah Disiapkan");
-            lblStatusResep.setForeground(new Color(39, 174, 96)); // Hijau
+            lblStatusResep.setForeground(new Color(39, 174, 96)); 
             btnKonfirmasi.setEnabled(false);
         } else {
             lblStatusResep.setText("Belum Disiapkan");
-            lblStatusResep.setForeground(new Color(230, 126, 34)); // Oranye
+            lblStatusResep.setForeground(new Color(230, 126, 34)); 
             btnKonfirmasi.setEnabled(true);
         }
     }
@@ -355,9 +355,9 @@ public class ResepMasukView extends JPanel {
     public void setStatusResepLabel(String status, boolean isSiap) {
         lblStatusResep.setText(status);
         if (isSiap) {
-            lblStatusResep.setForeground(new Color(39, 174, 96)); // Hijau
+            lblStatusResep.setForeground(new Color(39, 174, 96)); 
         } else {
-            lblStatusResep.setForeground(new Color(230, 126, 34)); // Oranye
+            lblStatusResep.setForeground(new Color(230, 126, 34)); 
         }
     }
     
@@ -369,7 +369,7 @@ public class ResepMasukView extends JPanel {
         return listResep;
     }
     
-    // --- LISTENERS ---
+    
     
     public void addListResepSelectListener(javax.swing.event.ListSelectionListener l) {
         listResep.addListSelectionListener(l);

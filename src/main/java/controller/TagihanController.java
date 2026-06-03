@@ -32,7 +32,6 @@ public class TagihanController {
     private void initController() {
         view.addKunjunganSelectListener(e -> hitungSubtotal());
         view.addJenisPembayaranSelectListener(e -> hitungDiskonPembayaran());
-        view.addBuatTagihanListener(e -> hitungSubtotal());
         view.addProsesBayarListener(e -> prosesPembayaran());
         view.addBatalListener(e -> {
             view.getCbKunjungan().setSelectedIndex(-1);
@@ -42,14 +41,16 @@ public class TagihanController {
 
     private void loadKunjunganPending() {
         view.getCbKunjungan().removeAllItems();
-        // Ambil kunjungan yang sudah selesai dan belum memiliki tagihan
+        
         String sql = "SELECT k.id, p.nama AS nama_pasien, d.nama AS nama_dokter, k.tanggal_kunjungan " +
                      "FROM kunjungan k " +
                      "JOIN pasien p ON k.id_pasien = p.id " +
                      "JOIN dokter d ON k.id_dokter = d.id " +
                      "LEFT JOIN tagihan t ON k.id = t.id_kunjungan " +
-                     "WHERE t.id IS NULL " +
+                     "LEFT JOIN resep r ON k.id = r.id_kunjungan " +
+                     "WHERE (t.id IS NULL OR t.status_pembayaran = 'Belum Lunas') " +
                      "  AND k.status = 'selesai' " +
+                     "  AND (r.id IS NULL OR r.status = 'sudah_disiapkan') " +
                      "ORDER BY k.tanggal_kunjungan DESC";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
@@ -73,7 +74,7 @@ public class TagihanController {
         currentTarifObat = 0;
         
         try {
-            // 1. Dapatkan detail Pasien & Dokter
+            
             String sqlKunjungan = "SELECT p.nama AS nama_pasien, d.id AS doc_id, d.nama AS doc_nama, d.spesialisasi, k.tanggal_kunjungan " +
                                   "FROM kunjungan k JOIN pasien p ON k.id_pasien = p.id JOIN dokter d ON k.id_dokter = d.id " +
                                   "WHERE k.id = ?";
@@ -83,7 +84,7 @@ public class TagihanController {
                     if (rs.next()) {
                         view.setAutoFillData(rs.getString("nama_pasien"), rs.getString("doc_nama"), rs.getString("tanggal_kunjungan"));
                         
-                        // Kalkulasi Polimorfisme Dokter
+                        
                         String spec = rs.getString("spesialisasi");
                         Dokter dokter = spec.equalsIgnoreCase("Umum") ? 
                                         new DokterUmum(rs.getInt("doc_id"), rs.getString("doc_nama")) : 
@@ -93,7 +94,7 @@ public class TagihanController {
                 }
             }
 
-            // 2. Dapatkan total Obat
+            
             String sqlObat = "SELECT SUM(dr.jumlah * o.harga) AS total_obat FROM detail_resep dr " +
                              "JOIN resep r ON dr.id_resep = r.id JOIN obat o ON dr.id_obat = o.id " +
                              "WHERE r.id_kunjungan = ?";
@@ -120,7 +121,7 @@ public class TagihanController {
         String jenis = (String) view.getCbJenisPembayaran().getSelectedItem();
         Pembayaran bayar;
 
-        // Aturan sesuai implementasi OOP model
+        
         if (jenis.equalsIgnoreCase("BPJS")) {
             bayar = new PembayaranBPJS(currentTarifDokter, currentTarifObat);
         } else if (jenis.equalsIgnoreCase("Asuransi Swasta")) {
@@ -141,13 +142,39 @@ public class TagihanController {
         }
 
         String jenis = (String) view.getCbJenisPembayaran().getSelectedItem();
-        String sql = "INSERT INTO tagihan (id_kunjungan, total_biaya, tanggal_pembayaran, jenis_pembayaran, status_pembayaran) VALUES (?, ?, CURRENT_TIMESTAMP, ?, 'Lunas')";
         
-        try (PreparedStatement pst = connection.prepareStatement(sql)) {
+        // Check if a tagihan record already exists for this kunjungan
+        String sqlCheck = "SELECT COUNT(*) FROM tagihan WHERE id_kunjungan = ?";
+        boolean exists = false;
+        try (PreparedStatement pst = connection.prepareStatement(sqlCheck)) {
             pst.setInt(1, terpilih.getId());
-            pst.setDouble(2, currentTotalAkhir);
-            pst.setString(3, jenis);
-            pst.executeUpdate();
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    exists = true;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            if (exists) {
+                String sql = "UPDATE tagihan SET total_biaya = ?, jenis_pembayaran = ?, status_pembayaran = 'Lunas', tanggal_pembayaran = CURRENT_TIMESTAMP WHERE id_kunjungan = ?";
+                try (PreparedStatement pst = connection.prepareStatement(sql)) {
+                    pst.setDouble(1, currentTotalAkhir);
+                    pst.setString(2, jenis);
+                    pst.setInt(3, terpilih.getId());
+                    pst.executeUpdate();
+                }
+            } else {
+                String sql = "INSERT INTO tagihan (id_kunjungan, total_biaya, tanggal_pembayaran, jenis_pembayaran, status_pembayaran) VALUES (?, ?, CURRENT_TIMESTAMP, ?, 'Lunas')";
+                try (PreparedStatement pst = connection.prepareStatement(sql)) {
+                    pst.setInt(1, terpilih.getId());
+                    pst.setDouble(2, currentTotalAkhir);
+                    pst.setString(3, jenis);
+                    pst.executeUpdate();
+                }
+            }
             
             JOptionPane.showMessageDialog(view, "Pembayaran Lunas!\nTotal: Rp " + String.format("%,.2f", currentTotalAkhir));
             resetForm();

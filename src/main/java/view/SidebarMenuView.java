@@ -21,22 +21,22 @@ public class SidebarMenuView extends JPanel {
     private JButton btnTagihan;
     private JButton btnLogout;
 
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // #37c2ae
-    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); // #2daf9b
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
+    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); 
     private Map<String, JButton> buttonMap = new HashMap<>();
 
     public SidebarMenuView() {
         setBackground(COLOR_PRIMARY);
         setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension(250, 0)); // Mengunci lebar sidebar
+        setPreferredSize(new Dimension(250, 0)); 
     }
 
     public void setupMenuForRole(String role, String namaUser) {
         removeAll();
         buttonMap.clear();
 
-        // 1. LOGO & BRAND
+        
         JPanel brandPanel = new JPanel();
         brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.X_AXIS));
         brandPanel.setOpaque(false);
@@ -61,7 +61,7 @@ public class SidebarMenuView extends JPanel {
 
         add(brandPanel);
 
-        // 2. USER INFO
+        
         lblUser = new JLabel("Halo, " + namaUser);
         lblUser.setFont(new Font("Poppins", Font.PLAIN, 12));
         lblUser.setForeground(new Color(255, 255, 255, 200));
@@ -71,7 +71,7 @@ public class SidebarMenuView extends JPanel {
         add(lblUser);
         add(Box.createRigidArea(new Dimension(0, 30)));
 
-        // Inisialisasi semua tombol menu
+        
         btnDashboard = createMenuButton("Dashboard", "DASHBOARD");
         btnPasien = createMenuButton("Data Pasien", "PASIEN");
         btnDokter = createMenuButton("Data Dokter", "DOKTER");
@@ -83,7 +83,7 @@ public class SidebarMenuView extends JPanel {
 
         role = role.toLowerCase().trim();
 
-        // 3. TAMBAHKAN MENU SESUAI ROLE
+        
         if (role.equals("admin")) {
             addMenu(btnDashboard);
             addMenu(btnPasien);
@@ -110,7 +110,7 @@ public class SidebarMenuView extends JPanel {
 
         add(Box.createVerticalGlue());
 
-        // 4. LOGOUT BUTTON
+        
         btnLogout = createMenuButton("Keluar", "LOGOUT");
         btnLogout.setForeground(new Color(255, 200, 200));
         btnLogout.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -187,7 +187,7 @@ public class SidebarMenuView extends JPanel {
         }
     }
 
-    // Getters untuk Action Listener di MainFrame
+    
     public JButton getBtnDashboard() { return btnDashboard; }
     public JButton getBtnPasien() { return btnPasien; }
     public JButton getBtnDokter() { return btnDokter; }

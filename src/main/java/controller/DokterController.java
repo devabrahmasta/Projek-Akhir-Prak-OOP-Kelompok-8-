@@ -35,7 +35,7 @@ public class DokterController {
         view.getBtnHapus().addActionListener(e -> hapusData());
         view.addSearchListener(e -> searchData(view.getTxtSearch().getText().trim()));
         
-        // Pindaan teks otomatis saat baris tabel dipilih
+        
         view.getTable().getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = view.getTable().getSelectedRow();
@@ -63,7 +63,7 @@ public class DokterController {
                         String nama = rs.getString("nama");
                         String spesialisasi = rs.getString("spesialisasi");
                         
-                        // Polimorfisme instansiasi objek turunan Dokter
+                        
                         Dokter d;
                         if ("Umum".equalsIgnoreCase(spesialisasi)) {
                             d = new DokterUmum(id, nama);
@@ -89,7 +89,7 @@ public class DokterController {
                             d.getSpesialisasi()
                         });
                     }
-                    // Reset form fields
+                    
                     view.getTxtId().setText("");
                     view.getTxtNama().setText("");
                     view.getTxtSpesialisasi().setText("");

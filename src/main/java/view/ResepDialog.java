@@ -39,9 +39,9 @@ public class ResepDialog extends JDialog {
         setLayout(new BorderLayout());
         getContentPane().setBackground(COLOR_BG);
 
-        // ============================================================
-        // NORTH — Header
-        // ============================================================
+        
+        
+        
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BG);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(18, 20, 10, 20));
@@ -58,9 +58,9 @@ public class ResepDialog extends JDialog {
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // ============================================================
-        // CENTER — 2 kolom: form kiri | tabel kanan
-        // ============================================================
+        
+        
+        
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBackground(COLOR_BG);
         centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 16));
@@ -71,7 +71,7 @@ public class ResepDialog extends JDialog {
         c.gridy = 0;
         c.weighty = 1.0;
 
-        // ---- KIRI: Form input obat ----
+        
         c.gridx = 0;
         c.weightx = 0.38;
         JPanel formCard = createRoundedCard();
@@ -89,7 +89,7 @@ public class ResepDialog extends JDialog {
         lblFormTitle.setForeground(COLOR_TEXT);
         formCard.add(lblFormTitle, fg);
 
-        // separator
+        
         fg.gridy++;
         fg.insets = new Insets(2, 0, 8, 0);
         JPanel sep = new JPanel();
@@ -99,7 +99,7 @@ public class ResepDialog extends JDialog {
 
         fg.insets = new Insets(4, 0, 2, 0);
 
-        // Pilih Obat
+        
         fg.gridy++;
         formCard.add(fieldLabel("Pilih Obat"), fg);
         fg.gridy++;
@@ -112,7 +112,7 @@ public class ResepDialog extends JDialog {
         cbObat.setPreferredSize(new Dimension(0, 34));
         formCard.add(cbObat, fg);
 
-        // Jumlah
+        
         fg.gridy++;
         fg.insets = new Insets(4, 0, 2, 0);
         formCard.add(fieldLabel("Jumlah"), fg);
@@ -122,7 +122,7 @@ public class ResepDialog extends JDialog {
         styleTextField(txtJumlah);
         formCard.add(txtJumlah, fg);
 
-        // Dosis
+        
         fg.gridy++;
         fg.insets = new Insets(4, 0, 2, 0);
         formCard.add(fieldLabel("Dosis (contoh: 3x1 sesudah makan)"), fg);
@@ -132,21 +132,21 @@ public class ResepDialog extends JDialog {
         styleTextField(txtDosis);
         formCard.add(txtDosis, fg);
 
-        // Tombol Tambahkan
+        
         fg.gridy++;
         fg.insets = new Insets(0, 0, 0, 0);
         btnTambahkan = new JButton("+ Tambahkan ke Resep");
         styleButton(btnTambahkan, COLOR_PRIMARY);
         formCard.add(btnTambahkan, fg);
 
-        // Spacer agar form rapat ke atas
+        
         fg.gridy++;
         fg.weighty = 1.0;
         formCard.add(Box.createVerticalGlue(), fg);
 
         centerPanel.add(formCard, c);
 
-        // ---- KANAN: Tabel item resep ----
+        
         c.gridx = 1;
         c.weightx = 0.62;
         c.insets = new Insets(0, 4, 0, 4);
@@ -159,7 +159,7 @@ public class ResepDialog extends JDialog {
         lblTableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 6, 0));
         tableCard.add(lblTableTitle, BorderLayout.NORTH);
 
-        // Tabel
+        
         String[] cols = {"ID_OBAT", "Nama Obat", "Jumlah", "Dosis", "×"};
         detailModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -180,12 +180,12 @@ public class ResepDialog extends JDialog {
         th.setForeground(COLOR_TEXT);
         th.setPreferredSize(new Dimension(0, 34));
 
-        // Hide ID_OBAT column
+        
         tabelDetail.getColumnModel().getColumn(0).setMinWidth(0);
         tabelDetail.getColumnModel().getColumn(0).setMaxWidth(0);
         tabelDetail.getColumnModel().getColumn(0).setWidth(0);
 
-        // Kolom "×" hapus
+        
         tabelDetail.getColumnModel().getColumn(4).setMinWidth(40);
         tabelDetail.getColumnModel().getColumn(4).setMaxWidth(40);
         tabelDetail.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
@@ -217,7 +217,7 @@ public class ResepDialog extends JDialog {
         scrollTabel.getViewport().setBackground(COLOR_CARD);
         tableCard.add(scrollTabel, BorderLayout.CENTER);
 
-        // Label hint kosong
+        
         JLabel lblHint = new JLabel("Klik × untuk menghapus item");
         lblHint.setFont(new Font("Poppins", Font.ITALIC, 10));
         lblHint.setForeground(COLOR_MUTED);
@@ -226,9 +226,9 @@ public class ResepDialog extends JDialog {
         centerPanel.add(tableCard, c);
         add(centerPanel, BorderLayout.CENTER);
 
-        // ============================================================
-        // SOUTH — Tombol aksi
-        // ============================================================
+        
+        
+        
         JPanel bottomPanel = new JPanel(new BorderLayout(12, 0));
         bottomPanel.setBackground(COLOR_BG);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 18, 20));
@@ -245,7 +245,7 @@ public class ResepDialog extends JDialog {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    // ---- Helpers ----
+    
 
     private JPanel createRoundedCard() {
         JPanel p = new JPanel() {
@@ -303,7 +303,7 @@ public class ResepDialog extends JDialog {
         });
     }
 
-    // ---- Public API ----
+    
     public ComboItem getSelectedObat()        { return (ComboItem) cbObat.getSelectedItem(); }
     public String getJumlahInput()            { return txtJumlah.getText().trim(); }
     public String getDosisInput()             { return txtDosis.getText().trim(); }

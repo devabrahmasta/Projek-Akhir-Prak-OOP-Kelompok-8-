@@ -14,7 +14,7 @@ public class ResepMasukController {
     private final ResepMasukView view;
     private final Connection connection;
 
-    // Inner class untuk menyimpan data resep dari DB
+    
     private static class ResepItem {
         final int id;
         final String noResep;
@@ -39,7 +39,7 @@ public class ResepMasukController {
         }
     }
 
-    // Daftar item yang ditampilkan di JList, agar bisa ambil id saat klik
+    
     private List<ResepItem> cachedResepList = new ArrayList<>();
 
     public ResepMasukController(ResepMasukView view) {
@@ -64,9 +64,9 @@ public class ResepMasukController {
         });
     }
 
-    // =============================================
-    // LOAD: Daftar resep dengan status 'belum_disiapkan'
-    // =============================================
+    
+    
+    
     public void loadDaftarResep() {
         SwingWorker<List<ResepItem>, Void> worker = new SwingWorker<>() {
             @Override
@@ -92,7 +92,7 @@ public class ResepMasukController {
                         String namaPasien    = rs.getString("nama_pasien");
                         String namaDokter    = rs.getString("nama_dokter");
                         String tanggal       = rs.getString("tanggal_kunjungan");
-                        boolean sudahDisiapkan = false; // filter: belum_disiapkan
+                        boolean sudahDisiapkan = false; 
                         list.add(new ResepItem(id, noResep, namaPasien, namaDokter, tanggal, sudahDisiapkan));
                     }
                 }
@@ -115,9 +115,9 @@ public class ResepMasukController {
         worker.execute();
     }
 
-    // =============================================
-    // LOAD: Detail obat dari satu resep terpilih
-    // =============================================
+    
+    
+    
     private void loadDetailResep(ResepItem item) {
         view.setDetail(
             item.noResep,
@@ -133,7 +133,7 @@ public class ResepMasukController {
                 List<Object[]> rows = new ArrayList<>();
                 if (connection == null) return rows;
 
-                // Join ke tabel obat untuk dapat nama & satuan
+                
                 String sql =
                     "SELECT o.nama, dr.jumlah, o.satuan, dr.dosis " +
                     "FROM detail_resep dr " +
@@ -175,9 +175,9 @@ public class ResepMasukController {
         worker.execute();
     }
 
-    // =============================================
-    // AKSI: Konfirmasi resep -> ubah status ke 'sudah_disiapkan'
-    // =============================================
+    
+    
+    
     private void handleKonfirmasi() {
         int idx = view.getSelectedResepIndex();
         if (idx < 0 || idx >= cachedResepList.size()) {
@@ -202,7 +202,7 @@ public class ResepMasukController {
 
                 connection.setAutoCommit(false);
                 try {
-                    // 1. Cek ketersediaan stok obat terlebih dahulu
+                    
                     String sqlCheckStok = "SELECT o.nama, o.stok, dr.jumlah FROM detail_resep dr " +
                                           "JOIN obat o ON dr.id_obat = o.id WHERE dr.id_resep = ?";
                     try (PreparedStatement pst = connection.prepareStatement(sqlCheckStok)) {
@@ -220,7 +220,7 @@ public class ResepMasukController {
                         }
                     }
 
-                    // 2. UPDATE status resep
+                    
                     String sqlUpdateResep = "UPDATE resep SET status = 'sudah_disiapkan' WHERE id = ?";
                     try (PreparedStatement pst = connection.prepareStatement(sqlUpdateResep)) {
                         pst.setInt(1, item.id);
@@ -231,7 +231,7 @@ public class ResepMasukController {
                         }
                     }
 
-                    // 3. Ambil detail resep untuk kurangi stok
+                    
                     String sqlSelectDetail = "SELECT id_obat, jumlah FROM detail_resep WHERE id_resep = ?";
                     List<int[]> obatList = new ArrayList<>();
                     try (PreparedStatement pst = connection.prepareStatement(sqlSelectDetail)) {
@@ -243,12 +243,12 @@ public class ResepMasukController {
                         }
                     }
 
-                    // 4. UPDATE stok obat
+                    
                     String sqlUpdateStok = "UPDATE obat SET stok = stok - ? WHERE id = ?";
                     try (PreparedStatement pst = connection.prepareStatement(sqlUpdateStok)) {
                         for (int[] obatItem : obatList) {
-                            pst.setInt(1, obatItem[1]); // jumlah
-                            pst.setInt(2, obatItem[0]); // id_obat
+                            pst.setInt(1, obatItem[1]); 
+                            pst.setInt(2, obatItem[0]); 
                             pst.addBatch();
                         }
                         pst.executeBatch();
@@ -272,10 +272,10 @@ public class ResepMasukController {
                             "Resep " + item.noResep + " berhasil dikonfirmasi!",
                             "Sukses", JOptionPane.INFORMATION_MESSAGE);
 
-                        // Update tampilan detail jadi 'Sudah Disiapkan' (hijau)
+                        
                         view.setStatusResepLabel("Sudah Disiapkan", true);
 
-                        // Refresh daftar (hilangkan dari pending list)
+                        
                         loadDaftarResep();
                     }
                 } catch (Exception e) {

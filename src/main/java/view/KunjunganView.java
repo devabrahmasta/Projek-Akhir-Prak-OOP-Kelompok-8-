@@ -12,7 +12,7 @@ import java.awt.event.MouseAdapter;
 
 public class KunjunganView extends JPanel {
 
-    // ---- Form components ----
+    
     private JLabel lblPasienNama;
     private JLabel lblPasienRM;
     private JLabel lblDokterNama;
@@ -25,7 +25,7 @@ public class KunjunganView extends JPanel {
     private JPanel formWrapper;
     private JLabel titleLabel;
 
-    // ---- Table + search components ----
+    
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtCari;
@@ -33,7 +33,7 @@ public class KunjunganView extends JPanel {
     private JComboBox<String> cbSortWaktu;
     private JLabel lblStatus;
 
-    // ---- Colors ----
+    
     private final Color COLOR_BG      = new Color(240, 246, 246);
     private final Color COLOR_CARD     = Color.WHITE;
     private final Color COLOR_PRIMARY  = new Color(55, 194, 174);
@@ -52,7 +52,7 @@ public class KunjunganView extends JPanel {
         initContent();
     }
 
-    // ---- HEADER: judul + search + filter ----
+    
     private void initHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
         headerPanel.setBackground(COLOR_BG);
@@ -91,14 +91,14 @@ public class KunjunganView extends JPanel {
         add(headerPanel, BorderLayout.NORTH);
     }
 
-    // ---- CENTER: JSplitPane (form kiri | tabel kanan) ----
+    
     private void initContent() {
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(380);
         splitPane.setBorder(null);
         splitPane.setOpaque(false);
 
-        // ========== PANEL KIRI: FORM ==========
+        
         formWrapper = createRoundedPanel();
         formWrapper.setLayout(new BorderLayout());
         formWrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -113,13 +113,13 @@ public class KunjunganView extends JPanel {
         gbc.gridy = 0;
         gbc.weightx = 1.0;
 
-        // Form title
+        
         JLabel formTitle = new JLabel("Form Kunjungan");
         formTitle.setFont(new Font("Poppins", Font.BOLD, 16));
         formTitle.setForeground(COLOR_TEXT);
         formPanel.add(formTitle, gbc);
 
-        // Pasien info panel (read-only)
+        
         gbc.gridy++;
         gbc.insets = new Insets(8, 0, 4, 0);
         JPanel pasienInfoPanel = new JPanel();
@@ -153,7 +153,7 @@ public class KunjunganView extends JPanel {
 
         formPanel.add(pasienInfoPanel, gbc);
 
-        // Keluhan label
+        
         gbc.gridy++;
         gbc.insets = new Insets(12, 0, 2, 0);
         JLabel lblKeluhan = new JLabel("Keluhan Pasien:");
@@ -161,7 +161,7 @@ public class KunjunganView extends JPanel {
         lblKeluhan.setForeground(COLOR_MUTED);
         formPanel.add(lblKeluhan, gbc);
 
-        // Keluhan textarea
+        
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 4, 0);
         txtKeluhan = new JTextArea(4, 15);
@@ -177,7 +177,7 @@ public class KunjunganView extends JPanel {
         scrollKeluhan.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         formPanel.add(scrollKeluhan, gbc);
 
-        // Diagnosa label
+        
         gbc.gridy++;
         gbc.insets = new Insets(8, 0, 2, 0);
         JLabel lblDiagnosa = new JLabel("Diagnosa:");
@@ -185,7 +185,7 @@ public class KunjunganView extends JPanel {
         lblDiagnosa.setForeground(COLOR_MUTED);
         formPanel.add(lblDiagnosa, gbc);
 
-        // Diagnosa textarea
+        
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 4, 0);
         txtDiagnosa = new JTextArea(4, 15);
@@ -201,7 +201,7 @@ public class KunjunganView extends JPanel {
         scrollDiagnosa.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
         formPanel.add(scrollDiagnosa, gbc);
 
-        // btnInputResep
+        
         gbc.gridy++;
         gbc.insets = new Insets(14, 0, 4, 0);
         btnInputResep = new JButton("Input Resep");
@@ -209,20 +209,20 @@ public class KunjunganView extends JPanel {
         btnInputResep.setEnabled(false);
         formPanel.add(btnInputResep, gbc);
 
-        // btnSelesaikan
+        
         gbc.gridy++;
         gbc.insets = new Insets(4, 0, 4, 0);
-        btnSelesaikan = new JButton("✓ Selesaikan Kunjungan");
+        btnSelesaikan = new JButton(" Selesaikan Kunjungan");
         styleButton(btnSelesaikan, COLOR_SUCCESS);
         btnSelesaikan.setEnabled(false);
         formPanel.add(btnSelesaikan, gbc);
 
-        // Spacer
+        
         gbc.gridy++;
         gbc.weighty = 1.0;
         formPanel.add(Box.createVerticalGlue(), gbc);
 
-        // DocumentListener: enable Selesaikan saat kedua field terisi
+        
         DocumentListener dl = new DocumentListener() {
             public void insertUpdate(DocumentEvent e)  { checkReady(); }
             public void removeUpdate(DocumentEvent e)  { checkReady(); }
@@ -247,7 +247,7 @@ public class KunjunganView extends JPanel {
 
         splitPane.setLeftComponent(formWrapper);
 
-        // ========== PANEL KANAN: TABEL ==========
+        
         JPanel tableWrapper = createRoundedPanel();
         tableWrapper.setLayout(new BorderLayout(0, 0));
         tableWrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -288,7 +288,7 @@ public class KunjunganView extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
-    // ---- Helpers ----
+    
     private JPanel createRoundedPanel() {
         JPanel p = new JPanel() {
             @Override
@@ -359,9 +359,9 @@ public class KunjunganView extends JPanel {
         t.setDefaultRenderer(Object.class, renderer);
     }
 
-    // ---- Public API: Form ----
+    
 
-    /** Isi form secara otomatis dari data antrian (read-only info pasien + clear keluhan/diagnosa) */
+    
     public void setFormAutoFilled(String namaPasien, String noRM, String namaDokter) {
         lblPasienNama.setText(namaPasien);
         lblPasienRM.setText("No. RM: " + noRM);
@@ -370,7 +370,7 @@ public class KunjunganView extends JPanel {
         txtDiagnosa.setText("");
     }
 
-    /** Enable/disable field input keluhan & diagnosa, dan tombol-tombol form */
+    
     public void setFormEnabled(boolean enabled) {
         txtKeluhan.setEnabled(enabled);
         txtDiagnosa.setEnabled(enabled);
@@ -380,7 +380,12 @@ public class KunjunganView extends JPanel {
 
     public void setSelesaikanEnabled(boolean enabled) { btnSelesaikan.setEnabled(enabled); }
 
-    /** Reset form ke kondisi awal (kosong) */
+    public void setKeluhanAndDiagnosa(String keluhan, String diagnosa) {
+        txtKeluhan.setText(keluhan);
+        txtDiagnosa.setText(diagnosa);
+    }
+
+    
     public void clearForm() {
         lblPasienNama.setText("—");
         lblPasienRM.setText("No. RM: —");
@@ -395,7 +400,7 @@ public class KunjunganView extends JPanel {
     public void addInputResepListener(ActionListener l)  { btnInputResep.addActionListener(l); }
     public void addSelesaikanListener(ActionListener l)  { btnSelesaikan.addActionListener(l); }
 
-    // ---- Public API: Table ----
+    
 
     public DefaultTableModel getTableModel()         { return tableModel; }
     public JTable getTable()                          { return table; }

@@ -72,7 +72,7 @@ public class ResepDialogController {
             return;
         }
 
-        // Cek duplikasi
+        
         DefaultTableModel model = view.getDetailModel();
         for (int i = 0; i < model.getRowCount(); i++) {
             if (model.getValueAt(i, 0).equals(selectedObat.getId())) {
@@ -81,7 +81,7 @@ public class ResepDialogController {
             }
         }
 
-        // Ambil nama obat bersih (tanpa "(Stok: N)")
+        
         String namaObat = selectedObat.getLabel();
         if (namaObat.contains(" (Stok:")) {
             namaObat = namaObat.substring(0, namaObat.indexOf(" (Stok:"));
@@ -104,7 +104,7 @@ public class ResepDialogController {
                 if (connection == null) return false;
                 connection.setAutoCommit(false);
                 try {
-                    // 1. INSERT resep
+                    
                     String sqlResep = "INSERT INTO resep (id_kunjungan, tanggal, status) VALUES (?, CURRENT_DATE, 'belum_disiapkan')";
                     int idResep = -1;
                     try (PreparedStatement ps = connection.prepareStatement(sqlResep, Statement.RETURN_GENERATED_KEYS)) {
@@ -115,14 +115,14 @@ public class ResepDialogController {
                         }
                     }
 
-                    // 2. INSERT detail_resep untuk tiap baris tabel
+                    
                     String sqlDetail = "INSERT INTO detail_resep (id_resep, id_obat, jumlah, dosis) VALUES (?, ?, ?, ?)";
                     try (PreparedStatement ps = connection.prepareStatement(sqlDetail)) {
                         for (int i = 0; i < model.getRowCount(); i++) {
                             ps.setInt(1, idResep);
-                            ps.setInt(2, (int) model.getValueAt(i, 0)); // id_obat (hidden col)
-                            ps.setInt(3, (int) model.getValueAt(i, 2)); // jumlah
-                            ps.setString(4, (String) model.getValueAt(i, 3)); // dosis
+                            ps.setInt(2, (int) model.getValueAt(i, 0)); 
+                            ps.setInt(3, (int) model.getValueAt(i, 2)); 
+                            ps.setString(4, (String) model.getValueAt(i, 3)); 
                             ps.addBatch();
                         }
                         ps.executeBatch();

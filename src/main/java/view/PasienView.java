@@ -35,7 +35,7 @@ public class PasienView extends JPanel {
     
     private JLabel lblStatus;
     
-    // --- COLOR PALETTE MODERN ---
+    
     private final Color COLOR_BG = new Color(240, 246, 246); 
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
@@ -90,7 +90,7 @@ public class PasienView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
         
-        // --- PANEL KIRI (FORM) ---
+        
         JPanel formWrapper = createRoundedWrapper();
         
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -204,7 +204,7 @@ public class PasienView extends JPanel {
         lblStatus.setForeground(COLOR_TEXT_MUTED);
         formPanel.add(lblStatus, gbc);
         
-        // Mengisi ruang kosong agar form rapat ke atas
+        
         gbc.gridy++;
         gbc.weighty = 1.0;
         formPanel.add(Box.createVerticalGlue(), gbc);
@@ -218,7 +218,7 @@ public class PasienView extends JPanel {
         
         formWrapper.add(formScrollPane, BorderLayout.CENTER);
         
-        // --- PANEL KANAN (TABEL) ---
+        
         JPanel tableWrapper = createRoundedWrapper();
 
         JPanel topTablePanel = new JPanel();
@@ -226,7 +226,7 @@ public class PasienView extends JPanel {
         topTablePanel.setOpaque(false);
         topTablePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
-        // Baris 1: judul
+        
         JLabel tableTitle = new JLabel("Daftar Pasien Terdaftar");
         tableTitle.setFont(new Font("Poppins", Font.BOLD, 16));
         tableTitle.setForeground(COLOR_TEXT);
@@ -237,7 +237,7 @@ public class PasienView extends JPanel {
 
         topTablePanel.add(Box.createRigidArea(new Dimension(0, 6)));
 
-        // Baris 2: sort di kiri, btnDaftarAntrian di kanan
+        
         JPanel row2 = new JPanel(new BorderLayout());
         row2.setOpaque(false);
         row2.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -304,7 +304,7 @@ public class PasienView extends JPanel {
         setButtonsState(false);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -412,7 +412,7 @@ public class PasienView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // --- METHOD BAWAAN CONTROLLER ---
+    
     
     public void setFormEnabled(boolean enabled) {
         txtNama.setEnabled(enabled);
@@ -466,7 +466,7 @@ public class PasienView extends JPanel {
     
     public String getCariInput() { return txtCari.getText().trim(); }
     
-    // Fitur Sorting
+    
     public String getSortOption() { 
         return cbSortWaktu.getSelectedItem() != null ? (String) cbSortWaktu.getSelectedItem() : "Paling Baru"; 
     }

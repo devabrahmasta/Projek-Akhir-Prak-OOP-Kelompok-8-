@@ -46,22 +46,22 @@ public class ObatController {
         List<Obat> listObat = new ArrayList<>();
         if (connection == null) return listObat;
 
-        // Query cukup mengambil kolom yang dibutuhkan oleh StokMonitorThread
+        
         String sql = "SELECT id, kode_obat, nama, stok, harga FROM obat";
         
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                // Pastikan class model.Obat Anda memiliki default constructor 
-                // dan setter/getter untuk Nama dan Stok.
+                
+                
                 Obat obat = new Obat(
                         rs.getInt("id"),
                     rs.getString("nama"),
                     rs.getInt("stok"),
                     rs.getDouble("harga")
                 );
-                // Jika DB menggunakan "kode_obat" alih-alih "id"
-                // obat.setId(rs.getString("kode_obat")); 
+                
+                
                 obat.setNama(rs.getString("nama"));
                 obat.setStok(rs.getInt("stok"));
                 
@@ -74,9 +74,9 @@ public class ObatController {
         return listObat;
     }
 
-    // =============================================
-    // LOAD: Semua data obat dari DB
-    // =============================================
+    
+    
+    
     public void loadData() {
         view.setStatusText("Memuat data obat...");
 
@@ -130,9 +130,9 @@ public class ObatController {
         worker.execute();
     }
 
-    // =============================================
-    // TAMBAH: Buka form kosong
-    // =============================================
+    
+    
+    
     private void handleTambah() {
         isEditingMode = true;
         selectedKode  = null;
@@ -143,9 +143,9 @@ public class ObatController {
         view.setStatusText("Mengisi data obat baru");
     }
 
-    // =============================================
-    // SIMPAN: Insert atau Update ke DB
-    // =============================================
+    
+    
+    
     private void handleSimpan() {
         String kode     = view.getKodeObatInput();
         String nama     = view.getNamaObatInput();
@@ -183,7 +183,7 @@ public class ObatController {
                 if (connection == null) return false;
 
                 if (selectedKode == null) {
-                    // INSERT
+                    
                     String sql = "INSERT INTO obat (kode_obat, nama, kategori, stok, satuan, harga, stok_minimum) " +
                                  "VALUES (?, ?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement pst = connection.prepareStatement(sql)) {
@@ -197,7 +197,7 @@ public class ObatController {
                         pst.executeUpdate();
                     }
                 } else {
-                    // UPDATE
+                    
                     String sql = "UPDATE obat SET nama=?, kategori=?, stok=?, satuan=?, harga=?, stok_minimum=? " +
                                  "WHERE kode_obat=?";
                     try (PreparedStatement pst = connection.prepareStatement(sql)) {
@@ -236,9 +236,9 @@ public class ObatController {
         worker.execute();
     }
 
-    // =============================================
-    // HAPUS: Delete dari DB berdasarkan kode
-    // =============================================
+    
+    
+    
     private void handleHapus() {
         String kode = view.getSelectedKode();
         if (kode == null) {
@@ -281,9 +281,9 @@ public class ObatController {
         worker.execute();
     }
 
-    // =============================================
-    // BATAL: Reset form
-    // =============================================
+    
+    
+    
     private void handleBatal() {
         isEditingMode = false;
         selectedKode  = null;
@@ -293,9 +293,9 @@ public class ObatController {
         view.setStatusText("Siap");
     }
 
-    // =============================================
-    // KLIK TABEL: Isi form dengan data baris terpilih
-    // =============================================
+    
+    
+    
     private void handleTableClick() {
         int row = view.getTable().getSelectedRow();
         if (row == -1 || isEditingMode) return;
@@ -316,9 +316,9 @@ public class ObatController {
         view.setStatusText("Mengedit obat: " + selectedKode);
     }
 
-    // =============================================
-    // UTIL: Generate kode obat otomatis
-    // =============================================
+    
+    
+    
     private String generateKode() {
         try {
             String sql = "SELECT MAX(CAST(SUBSTRING(kode_obat, 4) AS UNSIGNED)) AS max_no FROM obat WHERE kode_obat LIKE 'OBT%'";
@@ -335,9 +335,9 @@ public class ObatController {
         return "OBT001";
     }
 
-    // =============================================
-    // UTIL: Ambil ComboItem obat untuk dipakai module lain (ResepController dll)
-    // =============================================
+    
+    
+    
     public void loadObatComboItems(java.util.function.Consumer<ComboItem[]> callback) {
         SwingWorker<ComboItem[], Void> worker = new SwingWorker<>() {
             @Override

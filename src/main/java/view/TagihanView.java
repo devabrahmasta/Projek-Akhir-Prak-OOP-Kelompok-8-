@@ -22,7 +22,6 @@ public class TagihanView extends JPanel {
     private JComboBox<String> cbJenisPembayaran;
     private JLabel lblTotalBesar;
     
-    private JButton btnBuatTagihan;
     private JButton btnProsesBayar;
     private JButton btnBatal;
 
@@ -59,7 +58,7 @@ public class TagihanView extends JPanel {
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
 
-        // --- PANEL KIRI: FORM TAGIHAN ---
+        
         JPanel formWrapper = createRoundedWrapper();
         formWrapper.setLayout(new BorderLayout(10, 10));
 
@@ -160,16 +159,13 @@ public class TagihanView extends JPanel {
         formPanel.add(lblTotalBesar, gbc);
 
         gbc.gridy++;
-        JPanel btnPanel = new JPanel(new GridLayout(1, 3, 5, 5));
+        JPanel btnPanel = new JPanel(new GridLayout(1, 2, 8, 8));
         btnPanel.setBackground(COLOR_CARD);
-        btnBuatTagihan = new JButton("Hitung");
-        styleRoundedButton(btnBuatTagihan, COLOR_PRIMARY, COLOR_PRIMARY.darker());
         btnProsesBayar = new JButton("Bayar");
         styleRoundedButton(btnProsesBayar, new Color(46, 204, 113), new Color(39, 174, 96));
         btnBatal = new JButton("Batal");
         styleRoundedButton(btnBatal, new Color(231, 76, 60), new Color(192, 57, 43));
         
-        btnPanel.add(btnBuatTagihan);
         btnPanel.add(btnProsesBayar);
         btnPanel.add(btnBatal);
         formPanel.add(btnPanel, gbc);
@@ -178,7 +174,7 @@ public class TagihanView extends JPanel {
         formPanel.add(Box.createVerticalGlue(), gbc);
         formWrapper.add(formPanel, BorderLayout.CENTER);
 
-        // --- PANEL KANAN: TABEL ---
+        
         JPanel tableWrapper = createRoundedWrapper();
         tableWrapper.setLayout(new BorderLayout());
 
@@ -329,7 +325,6 @@ public class TagihanView extends JPanel {
     }
 
     public DefaultTableModel getTableModel() { return tableModel; }
-    public void addBuatTagihanListener(ActionListener l) { btnBuatTagihan.addActionListener(l); }
     public void addProsesBayarListener(ActionListener l) { btnProsesBayar.addActionListener(l); }
     public void addBatalListener(ActionListener l) { btnBatal.addActionListener(l); }
     public void addKunjunganSelectListener(ActionListener l) { cbKunjungan.addActionListener(l); }

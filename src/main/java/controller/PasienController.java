@@ -35,7 +35,7 @@ public class PasienController {
         view.addHapusListener(e -> handleHapus());
         view.addBatalListener(e -> handleBatal());
         
-        // Cari dan Sort dipusatkan di loadData
+        
         view.addCariListener(e -> loadData());
         view.addSortListener(e -> loadData());
         view.getBtnDaftarAntrian().addActionListener(e -> tampilkanDialogAntrian());
@@ -92,7 +92,7 @@ public class PasienController {
             if (dokterDipilih == null) return;
 
             try {
-                // Generate Nomor Antrian
+                
                 String sqlMax = "SELECT MAX(nomor_antrian) FROM antrian WHERE tanggal = CURRENT_DATE";
                 int noUrut = 1;
                 try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sqlMax)) {
@@ -137,7 +137,7 @@ public class PasienController {
                 List<String> conditions = new ArrayList<>();
                 List<Object> params = new ArrayList<>();
 
-                // Logika Pencarian
+                
                 if (keyword != null && !keyword.trim().isEmpty()) {
                     conditions.add("(nama LIKE ? OR no_rm LIKE ?)");
                     params.add("%" + keyword.trim() + "%");
@@ -148,11 +148,11 @@ public class PasienController {
                     sql.append(" AND ").append(String.join(" AND ", conditions));
                 }
 
-                // Logika Sorting
+                
                 if ("Paling Lama".equals(sortOption)) {
                     sql.append(" ORDER BY id ASC");
                 } else {
-                    sql.append(" ORDER BY id DESC"); // Paling Baru (Default)
+                    sql.append(" ORDER BY id DESC"); 
                 }
 
                 try (PreparedStatement pstmt = connection.prepareStatement(sql.toString())) {
