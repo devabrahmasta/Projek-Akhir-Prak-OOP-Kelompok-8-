@@ -1,6 +1,10 @@
 package controller;
 
 import database.DBConnection;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import view.PasienView;
 
 import javax.swing.*;
@@ -31,9 +35,10 @@ public class PasienController {
         view.addHapusListener(e -> handleHapus());
         view.addBatalListener(e -> handleBatal());
         
-        // Cari dan Sort dipusatkan di loadData
+        
         view.addCariListener(e -> loadData());
         view.addSortListener(e -> loadData());
+        view.getBtnDaftarAntrian().addActionListener(e -> tampilkanDialogAntrian());
         
         view.addTableMouseListener(new MouseAdapter() {
             @Override
@@ -41,6 +46,77 @@ public class PasienController {
                 handleTableClick();
             }
         });
+    }
+    
+    private void tampilkanDialogAntrian() {
+        int idPasien = view.getSelectedId();
+        if (idPasien == -1) {
+            JOptionPane.showMessageDialog(view, "Pilih pasien dari tabel terlebih dahulu!", "Validasi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(view), "Daftarkan Antrian", true);
+        dialog.setSize(400, 250);
+        dialog.setLayout(new GridBagLayout());
+        dialog.setLocationRelativeTo(view);
+        dialog.getContentPane().setBackground(Color.WHITE);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        dialog.add(new JLabel("Pilih Dokter / Poli:"), gbc);
+
+        gbc.gridx = 1;
+        JComboBox<view.ComboItem> cbDokter = new JComboBox<>();
+        dialog.add(cbDokter, gbc);
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT id, nama, spesialisasi FROM dokter WHERE is_active = 1")) {
+            while (rs.next()) {
+                cbDokter.addItem(new view.ComboItem(rs.getInt("id"), rs.getString("nama") + " (" + rs.getString("spesialisasi") + ")"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
+        JButton btnSimpan = new JButton("Simpan Antrian");
+        btnSimpan.setBackground(new Color(55, 194, 174));
+        btnSimpan.setForeground(Color.WHITE);
+        dialog.add(btnSimpan, gbc);
+
+        btnSimpan.addActionListener(e -> {
+            view.ComboItem dokterDipilih = (view.ComboItem) cbDokter.getSelectedItem();
+            if (dokterDipilih == null) return;
+
+            try {
+                
+                String sqlMax = "SELECT MAX(nomor_antrian) FROM antrian WHERE tanggal = CURRENT_DATE";
+                int noUrut = 1;
+                try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sqlMax)) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        noUrut = rs.getInt(1) + 1;
+                    }
+                }
+
+                String sqlInsert = "INSERT INTO antrian (id_pasien, id_dokter, tanggal, nomor_antrian, status) VALUES (?, ?, CURRENT_DATE, ?, 'Menunggu')";
+                try (PreparedStatement pstmt = connection.prepareStatement(sqlInsert)) {
+                    pstmt.setInt(1, idPasien);
+                    pstmt.setInt(2, dokterDipilih.getId());
+                    pstmt.setInt(3, noUrut);
+                    pstmt.executeUpdate();
+                }
+
+                JOptionPane.showMessageDialog(dialog, "Berhasil masuk antrian! Nomor Urut: " + noUrut);
+                dialog.dispose();
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(dialog, "Gagal menyimpan antrian: " + ex.getMessage());
+            }
+        });
+
+        dialog.setVisible(true);
     }
 
     public void loadData() {
@@ -55,13 +131,13 @@ public class PasienController {
                 if (connection == null) return dataList;
 
                 StringBuilder sql = new StringBuilder(
-                    "SELECT id, no_rm, nama, no_telp, tanggal_lahir, golongan_darah, alergi, alamat FROM pasien"
+                    "SELECT id, no_rm, nama, no_telp, tanggal_lahir, golongan_darah, alergi, alamat FROM pasien WHERE is_active = 1"
                 );
                 
                 List<String> conditions = new ArrayList<>();
                 List<Object> params = new ArrayList<>();
 
-                // Logika Pencarian
+                
                 if (keyword != null && !keyword.trim().isEmpty()) {
                     conditions.add("(nama LIKE ? OR no_rm LIKE ?)");
                     params.add("%" + keyword.trim() + "%");
@@ -69,14 +145,14 @@ public class PasienController {
                 }
 
                 if (!conditions.isEmpty()) {
-                    sql.append(" WHERE ").append(String.join(" AND ", conditions));
+                    sql.append(" AND ").append(String.join(" AND ", conditions));
                 }
 
-                // Logika Sorting
+                
                 if ("Paling Lama".equals(sortOption)) {
                     sql.append(" ORDER BY id ASC");
                 } else {
-                    sql.append(" ORDER BY id DESC"); // Paling Baru (Default)
+                    sql.append(" ORDER BY id DESC"); 
                 }
 
                 try (PreparedStatement pstmt = connection.prepareStatement(sql.toString())) {
@@ -268,78 +344,30 @@ public class PasienController {
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(view, "Apakah Anda yakin ingin menghapus data pasien ini?\nTindakan ini akan menghapus semua riwayat kunjungan, resep, tagihan, dan antrian terkait pasien ini secara permanen.", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(view, "Apakah Anda yakin ingin menonaktifkan (Soft Delete) data pasien ini?\nTindakan ini akan menyembunyikan pasien tanpa menghapus riwayat transaksi medis.", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
 
-        view.setStatusText("Menghapus data...");
+        view.setStatusText("Menonaktifkan data...");
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
             @Override
             protected Boolean doInBackground() throws Exception {
                 if (connection == null) return false;
                 
-                connection.setAutoCommit(false);
-                try {
-                    String sqlDelDetResep = "DELETE FROM detail_resep WHERE id_resep IN (" +
-                                            "  SELECT id FROM resep WHERE id_kunjungan IN (" +
-                                            "    SELECT id FROM kunjungan WHERE id_pasien = ?" +
-                                            "  )" +
-                                            ")";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelDetResep)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    
-                    String sqlDelResep = "DELETE FROM resep WHERE id_kunjungan IN (" +
-                                         "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
-                                         ")";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelResep)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    
-                    String sqlDelTagihan = "DELETE FROM tagihan WHERE id_kunjungan IN (" +
-                                           "  SELECT id FROM kunjungan WHERE id_pasien = ?" +
-                                           ")";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelTagihan)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    
-                    String sqlDelKunjungan = "DELETE FROM kunjungan WHERE id_pasien = ?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelKunjungan)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    
-                    String sqlDelAntrian = "DELETE FROM antrian WHERE id_pasien = ?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sqlDelAntrian)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-    
-                    String sql = "DELETE FROM pasien WHERE id = ?";
-                    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                        pstmt.setInt(1, id);
-                        pstmt.executeUpdate();
-                    }
-                    
-                    connection.commit();
-                    return true;
-                } catch (Exception e) {
-                    connection.rollback();
-                    throw e;
-                } finally {
-                    connection.setAutoCommit(true);
+                String sql = "UPDATE pasien SET is_active = 0 WHERE id = ?";
+                try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                    pstmt.setInt(1, id);
+                    pstmt.executeUpdate();
                 }
+                return true;
             }
 
             @Override
             protected void done() {
                 try {
                     if (get()) {
-                        JOptionPane.showMessageDialog(view, "Data pasien berhasil dihapus!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(view, "Data pasien berhasil dinonaktifkan (Soft Delete)!", "Sukses", JOptionPane.INFORMATION_MESSAGE);
                         isEditingMode = false;
                         view.clearForm();
                         view.setFormEnabled(false);

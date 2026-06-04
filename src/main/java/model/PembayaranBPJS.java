@@ -1,17 +1,17 @@
 package model;
 
 public class PembayaranBPJS extends Pembayaran {
-    private double jumlahBayar;
-    private double subsidiBPJS;
+    private double tarifDokter;
+    private double tarifObat;
 
-    public PembayaranBPJS(double jumlahBayar, double subsidiBPJS) {
-        this.jumlahBayar = jumlahBayar;
-        this.subsidiBPJS = subsidiBPJS;
+    public PembayaranBPJS(double tarifDokter, double tarifObat) {
+        this.tarifDokter = tarifDokter;
+        this.tarifObat = tarifObat;
     }
 
     @Override
     public double hitungTotal() {
-        return Math.max(0, jumlahBayar - subsidiBPJS);
+        return tarifObat * 0.2;
     }
 
     @Override

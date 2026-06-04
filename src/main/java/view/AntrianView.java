@@ -6,280 +6,277 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 
 public class AntrianView extends JPanel {
-    private JTable table;
-    private DefaultTableModel tableModel;
-    
-    private JComboBox<ComboItem> cbPasien;
-    private JComboBox<ComboItem> cbDokter;
-    private JTextField txtTanggal; 
-    private JComboBox<String> cbStatus;
-    
     private JComboBox<ComboItem> cbFilterDokter;
     private JTextField txtFilterTanggal;
     private JButton btnFilter;
+
+    private JLabel lblStatMenunggu, lblStatDiperiksa, lblStatSelesai;
+    private JLabel lblNowServing;
     
-    private JButton btnTambah;
-    private JButton btnPanggil;
-    private JButton btnSelesai;
-    private JButton btnBatal;
-    private JButton btnHapus;
-    
-    private JLabel lblStatus;
-    private JLabel lblSelectedInfo; // UX Baru: Banner Info Pasien Aktif
-    
-    // --- COLOR PALETTE MODERN ---
-    private final Color COLOR_BG = new Color(240, 246, 246); // Surface
+    private JPanel panelKartuAntrian;
+    private JTable tabelSelesai;
+    private DefaultTableModel tableModelSelesai;
+    private JPanel emptyStatePanel;
+
+    private final Color COLOR_BG = new Color(240, 246, 246);
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // Tosca
-    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); 
-    private final Color COLOR_TEXT = new Color(51, 51, 51); 
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174);
+    private final Color COLOR_TEXT = new Color(51, 51, 51);
     private final Color COLOR_TEXT_MUTED = new Color(130, 140, 145);
-    private final Color COLOR_BORDER = new Color(230, 230, 230);
-    private final Color COLOR_INPUT_BG = new Color(250, 250, 250);
-    
+
     public AntrianView() {
-        setLayout(new BorderLayout(15, 15));
+        setLayout(new BorderLayout(10, 10));
         setBackground(COLOR_BG);
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        initHeader();
-        initContent();
+        initTopBar();
+        initCenterPanel();
     }
-    
-    private void initHeader() {
+
+    private void initTopBar() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BG);
-        
-        JLabel titleLabel = new JLabel("Manajemen Antrian Klinik");
+
+        JLabel titleLabel = new JLabel("Manajemen Antrian Aktif");
         titleLabel.setFont(new Font("Poppins", Font.BOLD, 24));
         titleLabel.setForeground(COLOR_TEXT);
         headerPanel.add(titleLabel, BorderLayout.WEST);
-        
+
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterPanel.setBackground(COLOR_BG);
-        
-        JLabel lblFilDokter = new JLabel("Dokter:");
-        lblFilDokter.setFont(new Font("Poppins", Font.PLAIN, 13));
-        lblFilDokter.setForeground(COLOR_TEXT_MUTED);
-        filterPanel.add(lblFilDokter);
-        
+
+        filterPanel.add(createFormLabel("Dokter:"));
         cbFilterDokter = new JComboBox<>();
         cbFilterDokter.setPreferredSize(new Dimension(180, 32));
-        styleComboBox(cbFilterDokter);
+        cbFilterDokter.setBackground(Color.WHITE);
         filterPanel.add(cbFilterDokter);
-        
-        JLabel lblFilTgl = new JLabel("Tgl (YYYY-MM-DD):");
-        lblFilTgl.setFont(new Font("Poppins", Font.PLAIN, 13));
-        lblFilTgl.setForeground(COLOR_TEXT_MUTED);
-        filterPanel.add(lblFilTgl);
-        
+
+        filterPanel.add(createFormLabel("Tanggal:"));
         txtFilterTanggal = new JTextField(10);
-        styleTextField(txtFilterTanggal);
+        txtFilterTanggal.setPreferredSize(new Dimension(100, 32));
         filterPanel.add(txtFilterTanggal);
-        
+
         btnFilter = new JButton("Filter");
-        styleRoundedButton(btnFilter, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
+        styleRoundedButton(btnFilter, COLOR_PRIMARY, new Color(45, 175, 155));
         filterPanel.add(btnFilter);
-        
+
         headerPanel.add(filterPanel, BorderLayout.EAST);
         add(headerPanel, BorderLayout.NORTH);
     }
-    
-    private void initContent() {
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(340);
-        splitPane.setBorder(null);
-        splitPane.setBackground(COLOR_BG);
-        splitPane.setOpaque(false);
-        
-        // --- PANEL KIRI (FORM TAMBAH ANTRIAN) ---
-        JPanel formWrapper = createRoundedWrapper();
-        
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(COLOR_CARD);
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        
-        JLabel formTitle = new JLabel("Registrasi Antrian Baru");
-        formTitle.setFont(new Font("Poppins", Font.BOLD, 16));
-        formTitle.setForeground(COLOR_TEXT);
-        gbc.gridwidth = 2;
-        formPanel.add(formTitle, gbc);
-        
-        gbc.gridwidth = 1;
-        gbc.gridy++;
-        
-        formPanel.add(createFormLabel("Pasien:"), gbc);
-        gbc.gridy++;
-        cbPasien = new JComboBox<>();
-        styleComboBox(cbPasien);
-        formPanel.add(cbPasien, gbc);
-        
-        gbc.gridy++;
-        formPanel.add(createFormLabel("Pilih Dokter / Poli:"), gbc);
-        gbc.gridy++;
-        cbDokter = new JComboBox<>();
-        styleComboBox(cbDokter);
-        formPanel.add(cbDokter, gbc);
-        
-        gbc.gridy++;
-        formPanel.add(createFormLabel("Tanggal Antrian (YYYY-MM-DD):"), gbc);
-        gbc.gridy++;
-        txtTanggal = new JTextField();
-        styleTextField(txtTanggal);
-        formPanel.add(txtTanggal, gbc);
-        
-        gbc.gridy++;
-        formPanel.add(createFormLabel("Status Awal:"), gbc);
-        gbc.gridy++;
-        cbStatus = new JComboBox<>(new String[]{"Menunggu", "Dipanggil", "Selesai", "Batal"});
-        styleComboBox(cbStatus);
-        formPanel.add(cbStatus, gbc);
-        
-        gbc.gridy++;
-        gbc.insets = new Insets(20, 8, 8, 8);
-        
-        btnTambah = new JButton("Daftarkan ke Antrian");
-        styleRoundedButton(btnTambah, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
-        formPanel.add(btnTambah, gbc);
-        
-        gbc.gridy++;
-        lblStatus = new JLabel("Status: Siap");
-        lblStatus.setFont(new Font("Poppins", Font.ITALIC, 11));
-        lblStatus.setForeground(COLOR_TEXT_MUTED);
-        formPanel.add(lblStatus, gbc);
-        
-        // Mencegah form overflow
-        gbc.gridy++;
-        gbc.weighty = 1.0;
-        formPanel.add(Box.createVerticalGlue(), gbc);
-        
-        JScrollPane formScrollPane = new JScrollPane(formPanel);
-        formScrollPane.setBorder(null);
-        formScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        formScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        formScrollPane.getViewport().setBackground(COLOR_CARD);
-        
-        formWrapper.add(formScrollPane, BorderLayout.CENTER);
-        
-        // --- PANEL KANAN (KONTROL & TABEL ANTRIAN) ---
-        JPanel rightPanel = new JPanel(new BorderLayout(0, 15));
-        rightPanel.setOpaque(false);
-        
-        // UX BARU: Banner Kontrol Antrian Aktif
-        JPanel controlBanner = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(230, 245, 243)); // Latar belakang tosca super pucat
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
-                
-                // Garis aksen kiri
-                g2.setColor(COLOR_PRIMARY);
-                g2.fillRoundRect(0, 0, 8, getHeight(), 20, 20);
-                g2.fillRect(5, 0, 5, getHeight());
-                g2.dispose();
-            }
+
+    private void initCenterPanel() {
+        JSplitPane splitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPaneVertical.setDividerLocation(170);
+        splitPaneVertical.setDividerSize(0);
+        splitPaneVertical.setBorder(null);
+        splitPaneVertical.setOpaque(false);
+
+        JPanel panelInfo = new JPanel(new BorderLayout(10, 10));
+        panelInfo.setOpaque(false);
+
+        JPanel panelStats = new JPanel(new GridLayout(1, 3, 10, 0));
+        panelStats.setOpaque(false);
+        lblStatMenunggu = createStatLabel("Menunggu: 0", new Color(243, 156, 18));
+        lblStatDiperiksa = createStatLabel("Diperiksa: 0", new Color(41, 128, 185));
+        lblStatSelesai = createStatLabel("Selesai: 0", new Color(39, 174, 96));
+        panelStats.add(lblStatMenunggu);
+        panelStats.add(lblStatDiperiksa);
+        panelStats.add(lblStatSelesai);
+        panelInfo.add(panelStats, BorderLayout.NORTH);
+
+        JPanel panelNowServing = new JPanel(new BorderLayout());
+        panelNowServing.setBackground(COLOR_PRIMARY);
+        panelNowServing.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        lblNowServing = new JLabel("TIDAK ADA PASIEN DI RUANGAN");
+        lblNowServing.setFont(new Font("Poppins", Font.BOLD, 18));
+        lblNowServing.setForeground(Color.WHITE);
+        panelNowServing.add(lblNowServing, BorderLayout.CENTER);
+        panelInfo.add(panelNowServing, BorderLayout.CENTER);
+
+        splitPaneVertical.setTopComponent(panelInfo);
+
+        JSplitPane splitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPaneHorizontal.setDividerLocation(280);
+        splitPaneHorizontal.setDividerSize(5);
+        splitPaneHorizontal.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+        splitPaneHorizontal.setOpaque(false);
+
+        panelKartuAntrian = new JPanel();
+        panelKartuAntrian.setLayout(new BoxLayout(panelKartuAntrian, BoxLayout.Y_AXIS));
+        panelKartuAntrian.setBackground(COLOR_BG);
+        JScrollPane scrollKartu = new JScrollPane(panelKartuAntrian);
+        scrollKartu.setBorder(null);
+        scrollKartu.getVerticalScrollBar().setUnitIncrement(16);
+        splitPaneHorizontal.setLeftComponent(scrollKartu);
+
+        JPanel panelTabel = new JPanel(new BorderLayout());
+        panelTabel.setBackground(COLOR_CARD);
+        panelTabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JLabel lblTabel = new JLabel("Pasien Selesai Hari Ini");
+        lblTabel.setFont(new Font("Poppins", Font.BOLD, 14));
+        panelTabel.add(lblTabel, BorderLayout.NORTH);
+
+        String[] columns = {"No", "Nama Pasien", "No.RM", "Dokter", "Status"};
+        tableModelSelesai = new DefaultTableModel(columns, 0) {
+            @Override public boolean isCellEditable(int row, int col) { return false; }
         };
-        controlBanner.setOpaque(false);
-        controlBanner.setBorder(BorderFactory.createEmptyBorder(15, 25, 15, 20));
-        
-        JPanel infoPanel = new JPanel(new GridLayout(2, 1, 0, 2));
-        infoPanel.setOpaque(false);
-        JLabel lblControlTitle = new JLabel("KONTROL ANTRIAN TERPILIH");
-        lblControlTitle.setFont(new Font("Poppins", Font.BOLD, 12));
-        lblControlTitle.setForeground(COLOR_PRIMARY);
-        
-        lblSelectedInfo = new JLabel("Pilih antrian dari tabel...");
-        lblSelectedInfo.setFont(new Font("Poppins", Font.BOLD, 18));
-        lblSelectedInfo.setForeground(COLOR_TEXT);
-        
-        infoPanel.add(lblControlTitle);
-        infoPanel.add(lblSelectedInfo);
-        controlBanner.add(infoPanel, BorderLayout.CENTER);
-        
-        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        actionPanel.setOpaque(false);
-        
-        btnPanggil = new JButton("Panggil Pasien");
-        styleRoundedButton(btnPanggil, new Color(41, 121, 255), new Color(31, 100, 220)); 
-        
-        btnSelesai = new JButton("Selesai Diperiksa");
-        styleRoundedButton(btnSelesai, COLOR_PRIMARY, COLOR_PRIMARY_HOVER); 
-        
-        btnBatal = new JButton("Batal");
-        styleRoundedButton(btnBatal, new Color(149, 165, 166), new Color(120, 140, 140)); 
-        
-        btnHapus = new JButton("Hapus");
-        styleRoundedButton(btnHapus, new Color(231, 76, 60), new Color(200, 60, 50)); 
-        
-        actionPanel.add(btnPanggil);
-        actionPanel.add(btnSelesai);
-        actionPanel.add(btnBatal);
-        actionPanel.add(btnHapus);
-        controlBanner.add(actionPanel, BorderLayout.EAST);
-        
-        rightPanel.add(controlBanner, BorderLayout.NORTH);
-        
-        // Tabel Antrian
-        JPanel tableWrapper = createRoundedWrapper();
-        JLabel tableTitle = new JLabel("Daftar Antrian Hari Ini");
-        tableTitle.setFont(new Font("Poppins", Font.BOLD, 16));
-        tableTitle.setForeground(COLOR_TEXT);
-        tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        tableWrapper.add(tableTitle, BorderLayout.NORTH);
-        
-        String[] columns = {"ID", "No. Antrian", "Nama Pasien", "Dokter Pemeriksa", "Tanggal", "Status"};
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
-        };
-        table = new JTable(tableModel);
-        styleTable(table);
-        
-        // Sembunyikan kolom ID secara visual
-        table.getColumnModel().getColumn(0).setMinWidth(0);
-        table.getColumnModel().getColumn(0).setMaxWidth(0);
-        table.getColumnModel().getColumn(0).setWidth(0);
-        
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.getViewport().setBackground(COLOR_CARD);
-        scrollPane.setBorder(BorderFactory.createLineBorder(COLOR_BORDER, 1));
-        tableWrapper.add(scrollPane, BorderLayout.CENTER);
-        
-        rightPanel.add(tableWrapper, BorderLayout.CENTER);
-        
-        splitPane.setLeftComponent(formWrapper);
-        splitPane.setRightComponent(rightPanel);
-        add(splitPane, BorderLayout.CENTER);
-        
-        setSelectionButtonsEnabled(false);
+        tabelSelesai = new JTable(tableModelSelesai);
+        styleTable(tabelSelesai);
+        JScrollPane scrollTabel = new JScrollPane(tabelSelesai);
+        scrollTabel.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230)));
+        panelTabel.add(scrollTabel, BorderLayout.CENTER);
+
+        splitPaneHorizontal.setRightComponent(panelTabel);
+        splitPaneVertical.setBottomComponent(splitPaneHorizontal);
+
+        add(splitPaneVertical, BorderLayout.CENTER);
     }
-    
-    // --- HELPER METODE UI MODERN ---
-    
-    private JPanel createRoundedWrapper() {
-        JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(COLOR_CARD);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
-                g2.dispose();
+
+    public void setNowServing(java.util.List<controller.AntrianController.ActiveServingInfo> activeList) {
+        if (activeList == null || activeList.isEmpty()) {
+            lblNowServing.setText("TIDAK ADA PASIEN DI RUANGAN");
+        } else {
+            StringBuilder sb = new StringBuilder("<html><div style='line-height: 1.3;'>");
+            if (activeList.size() == 1) {
+                controller.AntrianController.ActiveServingInfo info = activeList.get(0);
+                sb.append("SEDANG DIPERIKSA: No. ").append(info.nomorAntrian)
+                  .append(" - ").append(info.namaPasien)
+                  .append(" (Ruang ").append(info.namaDokter).append(")");
+            } else {
+                sb.append("SEDANG DIPERIKSA:<br>");
+                for (controller.AntrianController.ActiveServingInfo info : activeList) {
+                    sb.append("&bull; No. ").append(info.nomorAntrian)
+                      .append(" - ").append(info.namaPasien)
+                      .append(" (Ruang ").append(info.namaDokter).append(")<br>");
+                }
             }
-        };
-        wrapper.setOpaque(false);
-        wrapper.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        return wrapper;
+            sb.append("</div></html>");
+            lblNowServing.setText(sb.toString());
+        }
+    }
+
+    public void setStatCount(int menunggu, int diperiksa, int selesai) {
+        lblStatMenunggu.setText("Menunggu: " + menunggu);
+        lblStatDiperiksa.setText("Diperiksa: " + diperiksa);
+        lblStatSelesai.setText("Selesai: " + selesai);
+    }
+
+    public void clearAntrianCards() {
+        panelKartuAntrian.removeAll();
+        showEmptyState();
+        panelKartuAntrian.revalidate();
+        panelKartuAntrian.repaint();
+    }
+
+    public void showEmptyState() {
+        emptyStatePanel = new JPanel();
+        emptyStatePanel.setLayout(new BoxLayout(emptyStatePanel, BoxLayout.Y_AXIS));
+        emptyStatePanel.setBackground(COLOR_BG);
+        emptyStatePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        emptyStatePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        JLabel icon = new JLabel("—", SwingConstants.CENTER);
+        icon.setFont(new Font("Poppins", Font.BOLD, 32));
+        icon.setForeground(COLOR_TEXT_MUTED);
+        icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel msg1 = new JLabel("Belum ada antrian", SwingConstants.CENTER);
+        msg1.setFont(new Font("Poppins", Font.BOLD, 13));
+        msg1.setForeground(COLOR_TEXT_MUTED);
+        msg1.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel msg2 = new JLabel("Antrian muncul setelah pasien didaftarkan", SwingConstants.CENTER);
+        msg2.setFont(new Font("Poppins", Font.PLAIN, 11));
+        msg2.setForeground(COLOR_TEXT_MUTED);
+        msg2.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        emptyStatePanel.add(Box.createVerticalGlue());
+        emptyStatePanel.add(icon);
+        emptyStatePanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        emptyStatePanel.add(msg1);
+        emptyStatePanel.add(Box.createRigidArea(new Dimension(0, 4)));
+        emptyStatePanel.add(msg2);
+        emptyStatePanel.add(Box.createVerticalGlue());
+
+        panelKartuAntrian.add(emptyStatePanel);
+        panelKartuAntrian.revalidate();
+        panelKartuAntrian.repaint();
+    }
+
+    public void addAntrianCard(int nomorUrut, String nama, String rm, String dokter,
+                               ActionListener onPanggil, ActionListener onBatal) {
+        if (emptyStatePanel != null && emptyStatePanel.getParent() == panelKartuAntrian) {
+            panelKartuAntrian.remove(emptyStatePanel);
+        }
+
+        JPanel card = new JPanel(new BorderLayout(10, 10));
+        card.setBackground(COLOR_CARD);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 4, 0, 0, COLOR_PRIMARY),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        card.setMaximumSize(new Dimension(300, 100));
+
+        JLabel lblNo = new JLabel("#" + nomorUrut);
+        lblNo.setFont(new Font("Poppins", Font.BOLD, 20));
+        lblNo.setForeground(COLOR_PRIMARY);
+        card.add(lblNo, BorderLayout.WEST);
+
+        JPanel info = new JPanel(new GridLayout(2, 1));
+        info.setOpaque(false);
+        JLabel lblNama = new JLabel(nama);
+        lblNama.setFont(new Font("Poppins", Font.BOLD, 12));
+        JLabel lblSub = new JLabel(rm + " | " + dokter);
+        lblSub.setFont(new Font("Poppins", Font.PLAIN, 10));
+        lblSub.setForeground(COLOR_TEXT_MUTED);
+        info.add(lblNama);
+        info.add(lblSub);
+        card.add(info, BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.setLayout(new BoxLayout(btnPanel, BoxLayout.Y_AXIS));
+        btnPanel.setOpaque(false);
+
+        if (onPanggil != null) {
+            JButton btnPanggil = new JButton("Panggil");
+            btnPanggil.setFont(new Font("Poppins", Font.BOLD, 10));
+            btnPanggil.setBackground(COLOR_PRIMARY);
+            btnPanggil.setForeground(Color.WHITE);
+            btnPanggil.setFocusPainted(false);
+            btnPanggil.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btnPanggil.addActionListener(onPanggil);
+            btnPanel.add(btnPanggil);
+            btnPanel.add(Box.createRigidArea(new Dimension(0, 4)));
+        }
+
+        if (onBatal != null) {
+            JButton btnBatal = new JButton("Batal");
+            btnBatal.setFont(new Font("Poppins", Font.BOLD, 10));
+            btnBatal.setBackground(new Color(231, 76, 60));
+            btnBatal.setForeground(Color.WHITE);
+            btnBatal.setFocusPainted(false);
+            btnBatal.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btnBatal.addActionListener(onBatal);
+            btnPanel.add(btnBatal);
+        }
+
+        card.add(btnPanel, BorderLayout.EAST);
+
+        panelKartuAntrian.add(card);
+        panelKartuAntrian.add(Box.createRigidArea(new Dimension(0, 10)));
+        panelKartuAntrian.revalidate();
+    }
+
+    private JLabel createStatLabel(String text, Color color) {
+        JLabel lbl = new JLabel(text, SwingConstants.CENTER);
+        lbl.setFont(new Font("Poppins", Font.BOLD, 14));
+        lbl.setForeground(Color.WHITE);
+        lbl.setOpaque(true);
+        lbl.setBackground(color);
+        lbl.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        return lbl;
     }
 
     private JLabel createFormLabel(String text) {
@@ -288,195 +285,67 @@ public class AntrianView extends JPanel {
         label.setForeground(COLOR_TEXT_MUTED);
         return label;
     }
-    
-    private void styleTextField(JTextField field) {
-        field.setBackground(COLOR_INPUT_BG);
-        field.setForeground(COLOR_TEXT);
-        field.setCaretColor(COLOR_TEXT);
-        field.setFont(new Font("Poppins", Font.PLAIN, 13));
-        field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COLOR_BORDER, 1),
-            BorderFactory.createEmptyBorder(8, 10, 8, 10)
-        ));
-    }
-    
-    private void styleComboBox(JComboBox combo) {
-        combo.setBackground(COLOR_INPUT_BG);
-        combo.setForeground(COLOR_TEXT);
-        combo.setFont(new Font("Poppins", Font.PLAIN, 13));
-        combo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COLOR_BORDER, 1),
-            BorderFactory.createEmptyBorder(2, 5, 2, 5)
-        ));
-    }
-    
-    private void styleRoundedButton(JButton button, Color bgColor, Color hoverColor) {
-        final Color COLOR_DISABLED_BG = new Color(220, 220, 220);
-        final Color COLOR_DISABLED_TEXT = new Color(160, 160, 160);
 
+    private void styleRoundedButton(JButton button, Color bgColor, Color hoverColor) {
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
         button.setFont(new Font("Poppins", Font.BOLD, 13));
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
-        button.setOpaque(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-
+        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
         button.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
             @Override
             public void paint(Graphics g, JComponent c) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                AbstractButton b = (AbstractButton) c;
-                ButtonModel model = b.getModel();
-
-                Color bg;
-                if (!b.isEnabled()) {
-                    bg = COLOR_DISABLED_BG;
-                } else if (model.isPressed()) {
-                    bg = hoverColor.darker();
-                } else if (model.isRollover()) {
-                    bg = hoverColor;
-                } else {
-                    bg = bgColor;
-                }
-
-                g2.setColor(bg);
-                g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 12, 12);
-                g2.dispose();
-                super.paint(g, c);
-            }
-
-            @Override
-            protected void paintText(Graphics g, AbstractButton b, Rectangle textRect, String text) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                g2.setFont(b.getFont());
-                g2.setColor(b.isEnabled() ? Color.WHITE : COLOR_DISABLED_TEXT);
-
-                FontMetrics fm = g2.getFontMetrics();
-                int x = textRect.x;
-                int y = textRect.y + fm.getAscent();
-                g2.drawString(text, x, y);
+                g2.setColor(c.getBackground());
+                g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 10, 10);
+                super.paint(g2, c);
                 g2.dispose();
             }
         });
     }
-    
+
     private void styleTable(JTable table) {
         table.setBackground(COLOR_CARD);
         table.setForeground(COLOR_TEXT);
-        table.setGridColor(COLOR_BORDER);
+        table.setGridColor(new Color(230, 230, 230));
         table.setShowGrid(true);
         table.setFont(new Font("Poppins", Font.PLAIN, 12));
-        table.setRowHeight(35); // Baris sedikit lebih lega
-        table.setSelectionBackground(COLOR_PRIMARY);
-        table.setSelectionForeground(Color.WHITE);
-        
+        table.setRowHeight(30);
         JTableHeader header = table.getTableHeader();
         header.setBackground(new Color(245, 245, 245));
-        header.setForeground(COLOR_TEXT);
         header.setFont(new Font("Poppins", Font.BOLD, 12));
-        header.setBorder(BorderFactory.createLineBorder(COLOR_BORDER));
-        header.setPreferredSize(new Dimension(header.getWidth(), 38));
-        
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBackground(COLOR_CARD);
-        renderer.setForeground(COLOR_TEXT);
-        table.setDefaultRenderer(Object.class, renderer);
+        header.setPreferredSize(new Dimension(header.getWidth(), 35));
     }
     
-    // --- METHOD BAWAAN CONTROLLER ---
+    public void addFilterListener(ActionListener l) {
+        btnFilter.addActionListener(l);
+    }
     
-    public void setPasienList(ComboItem[] items) {
-        cbPasien.removeAllItems();
-        for (ComboItem item : items) { cbPasien.addItem(item); }
+    public ComboItem getFilterDokter() {
+        return (ComboItem) cbFilterDokter.getSelectedItem();
+    }
+    
+    public String getFilterTanggal() {
+        return txtFilterTanggal.getText().trim();
+    }
+    
+    public void setFilterTanggal(String tgl) {
+        txtFilterTanggal.setText(tgl);
+    }
+    
+    public DefaultTableModel getTableModelSelesai() {
+        return tableModelSelesai;
     }
     
     public void setDokterList(ComboItem[] items) {
-        cbDokter.removeAllItems();
         cbFilterDokter.removeAllItems();
-        cbFilterDokter.addItem(new ComboItem(0, "-- Semua Dokter --"));
+        cbFilterDokter.addItem(new ComboItem(0, "Semua Dokter")); 
         for (ComboItem item : items) {
-            cbDokter.addItem(item);
             cbFilterDokter.addItem(item);
-        }
-    }
-    
-    public void clearForm() {
-        if (cbPasien.getItemCount() > 0) cbPasien.setSelectedIndex(0);
-        if (cbDokter.getItemCount() > 0) cbDokter.setSelectedIndex(0);
-        cbStatus.setSelectedIndex(0);
-        table.clearSelection();
-        setSelectionButtonsEnabled(false);
-    }
-    
-    public void fillForm(ComboItem pasienItem, ComboItem dokterItem, String tgl, String status) {
-        cbPasien.setSelectedItem(pasienItem);
-        cbDokter.setSelectedItem(dokterItem);
-        txtTanggal.setText(tgl);
-        cbStatus.setSelectedItem(status);
-    }
-    
-    public ComboItem getSelectedPasien() { return (ComboItem) cbPasien.getSelectedItem(); }
-    public ComboItem getSelectedDokter() { return (ComboItem) cbDokter.getSelectedItem(); }
-    public String getTanggalInput() { return txtTanggal.getText().trim(); }
-    public String getStatusInput() { return (String) cbStatus.getSelectedItem(); }
-    
-    public ComboItem getFilterDokter() { return (ComboItem) cbFilterDokter.getSelectedItem(); }
-    public String getFilterTanggal() { return txtFilterTanggal.getText().trim(); }
-    
-    public void setTanggalInput(String val) { txtTanggal.setText(val); }
-    public void setFilterTanggal(String val) { txtFilterTanggal.setText(val); }
-    
-    public void addTambahListener(ActionListener l) { btnTambah.addActionListener(l); }
-    public void addPanggilListener(ActionListener l) { btnPanggil.addActionListener(l); }
-    public void addSelesaiListener(ActionListener l) { btnSelesai.addActionListener(l); }
-    public void addBatalListener(ActionListener l) { btnBatal.addActionListener(l); }
-    public void addHapusListener(ActionListener l) { btnHapus.addActionListener(l); }
-    public void addFilterListener(ActionListener l) { btnFilter.addActionListener(l); }
-    public void addTableMouseListener(MouseAdapter l) { table.addMouseListener(l); }
-    
-    public DefaultTableModel getTableModel() { return tableModel; }
-    public JTable getTable() { return table; }
-    
-    public int getSelectedId() {
-        int row = table.getSelectedRow();
-        if (row != -1) {
-            return Integer.parseInt(table.getValueAt(row, 0).toString());
-        }
-        return -1;
-    }
-    
-    public void setStatusText(String text) {
-        lblStatus.setText("Status: " + text);
-    }
-    
-    // UX PINTAR: Tombol menyesuaikan status dari tabel
-    public void setSelectionButtonsEnabled(boolean enabled) {
-        if (!enabled) {
-            lblSelectedInfo.setText("Pilih antrian dari tabel...");
-            btnPanggil.setEnabled(false);
-            btnSelesai.setEnabled(false);
-            btnBatal.setEnabled(false);
-            btnHapus.setEnabled(false);
-        } else {
-            int row = table.getSelectedRow();
-            if (row != -1) {
-                String nama = table.getValueAt(row, 2).toString();
-                String status = table.getValueAt(row, 5).toString();
-                
-                lblSelectedInfo.setText(nama + " (" + status + ")");
-                
-                // Logika Aktifasi Tombol
-                btnPanggil.setEnabled(status.equals("Menunggu"));
-                btnSelesai.setEnabled(status.equals("Dipanggil"));
-                btnBatal.setEnabled(status.equals("Menunggu") || status.equals("Dipanggil"));
-                btnHapus.setEnabled(true);
-            }
         }
     }
 }

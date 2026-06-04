@@ -11,7 +11,7 @@ import java.awt.event.MouseEvent;
 
 public class DashboardView extends JPanel {
     
-    // --- KOMPONEN CONTROLLER ---
+    
     private JLabel lblTotalPasien;
     private JLabel lblAntrianMenunggu;
     private JLabel lblKunjunganHariIni;
@@ -26,9 +26,9 @@ public class DashboardView extends JPanel {
     private JButton btnRefresh;
     private JLabel lblLastUpdated;
     
-    // --- COLOR PALETTE ---
-    private final Color COLOR_SURFACE = new Color(240, 246, 246); // #f0f6f6
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174);  // #37c2ae
+    
+    private final Color COLOR_SURFACE = new Color(240, 246, 246); 
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174);  
     private final Color COLOR_CARD = Color.WHITE;
     private final Color COLOR_TEXT_DARK = new Color(51, 51, 51);
     private final Color COLOR_TEXT_MUTED = new Color(130, 140, 145);
@@ -77,7 +77,7 @@ public class DashboardView extends JPanel {
         JPanel contentPanel = new JPanel(new BorderLayout(20, 20));
         contentPanel.setBackground(COLOR_SURFACE);
         
-        // --- KARTU STATISTIK ---
+        
         JPanel cardsGrid = new JPanel(new GridLayout(1, 4, 20, 0));
         cardsGrid.setBackground(COLOR_SURFACE);
         
@@ -93,11 +93,11 @@ public class DashboardView extends JPanel {
         
         contentPanel.add(cardsGrid, BorderLayout.NORTH);
         
-        // --- AREA TABEL ---
+        
         JPanel tablesPanel = new JPanel(new GridLayout(1, 2, 20, 0));
         tablesPanel.setBackground(COLOR_SURFACE);
         
-        // Tabel Antrian
+        
         String[] antrianCols = {"No", "Nama Pasien", "Dokter", "Status"};
         tableModelAntrian = new DefaultTableModel(antrianCols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -106,7 +106,7 @@ public class DashboardView extends JPanel {
         styleBasicTable(tableAntrian);
         tablesPanel.add(createRoundedTableWrapper("Antrian Pasien Hari Ini", tableAntrian));
         
-        // Tabel Kunjungan
+        
         String[] kunjunganCols = {"Waktu", "Nama Pasien", "Keluhan", "Diagnosa"};
         tableModelKunjungan = new DefaultTableModel(kunjunganCols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
@@ -119,7 +119,7 @@ public class DashboardView extends JPanel {
         add(contentPanel, BorderLayout.CENTER);
     }
     
-    // --- CUSTOM UI RENDERERS ---
+    
     
     private JPanel createRoundedStatCard(String title, JLabel valueLabel) {
         JPanel card = new JPanel() {
@@ -130,7 +130,7 @@ public class DashboardView extends JPanel {
                 g2.setColor(COLOR_CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
                 
-                // Aksen vertikal tipis di sisi kiri mengikuti warna primary
+                
                 g2.setColor(COLOR_PRIMARY);
                 g2.fillRoundRect(0, 0, 6, getHeight(), 20, 20);
                 g2.fillRect(3, 0, 3, getHeight()); 
@@ -174,9 +174,9 @@ public class DashboardView extends JPanel {
         lblTitle.setForeground(COLOR_TEXT_DARK);
         wrapper.add(lblTitle, BorderLayout.NORTH);
         
-        // Membungkus tabel dengan JScrollPane
+        
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230))); // Border tipis abu-abu untuk scrollpane
+        scroll.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 230))); 
         scroll.getViewport().setBackground(COLOR_CARD);
         wrapper.add(scroll, BorderLayout.CENTER);
         
@@ -222,7 +222,7 @@ public class DashboardView extends JPanel {
         btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
     }
     
-    // --- GETTER & SETTER WAJIB UNTUK CONTROLLER ---
+    
     
     public void setTotalPasien(String value) { lblTotalPasien.setText(value); }
     public void setAntrianMenunggu(String value) { lblAntrianMenunggu.setText(value); }

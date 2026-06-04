@@ -7,26 +7,32 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.ActionListener;
 
 public class DokterView extends JPanel {
     private JTable table;
     private DefaultTableModel tableModel;
-    
+
     private JTextField txtId;
     private JTextField txtNama;
     private JTextField txtSpesialisasi;
-    
+
     private JButton btnTambah;
     private JButton btnUbah;
     private JButton btnHapus;
     private JButton btnRefresh;
+
+    private JTextField txtSearch;
+    private JButton btnSearch;
+
+    private JSplitPane splitPane;
+    private JPanel formWrapper;
+    private JLabel pageTitleLabel;
     
-    // --- COLOR PALETTE MODERN ---
-    private final Color COLOR_BG = new Color(240, 246, 246); // Surface
+    
+    private final Color COLOR_BG = new Color(240, 246, 246); 
     private final Color COLOR_CARD = Color.WHITE;
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // Tosca
+    private final Color COLOR_PRIMARY = new Color(55, 194, 174); 
     private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); 
     private final Color COLOR_TEXT = new Color(51, 51, 51); 
     private final Color COLOR_TEXT_MUTED = new Color(130, 140, 145);
@@ -45,24 +51,24 @@ public class DokterView extends JPanel {
     private void initHeader() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(COLOR_BG);
-        
-        JLabel titleLabel = new JLabel("Manajemen Data Dokter");
-        titleLabel.setFont(new Font("Poppins", Font.BOLD, 24));
-        titleLabel.setForeground(COLOR_TEXT);
-        headerPanel.add(titleLabel, BorderLayout.WEST);
-        
+
+        pageTitleLabel = new JLabel("Manajemen Data Dokter");
+        pageTitleLabel.setFont(new Font("Poppins", Font.BOLD, 24));
+        pageTitleLabel.setForeground(COLOR_TEXT);
+        headerPanel.add(pageTitleLabel, BorderLayout.WEST);
+
         add(headerPanel, BorderLayout.NORTH);
     }
     
     private void initContent() {
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(340);
         splitPane.setBorder(null);
         splitPane.setBackground(COLOR_BG);
         splitPane.setOpaque(false);
+
         
-        // --- PANEL KIRI (FORM) ---
-        JPanel formWrapper = createRoundedWrapper();
+        formWrapper = createRoundedWrapper();
         
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(COLOR_CARD);
@@ -83,19 +89,19 @@ public class DokterView extends JPanel {
         gbc.gridwidth = 1;
         gbc.gridy++;
         
-        // Input ID Dokter (Read Only)
+        
         formPanel.add(createFormLabel("ID Dokter (Otomatis):"), gbc);
         gbc.gridy++;
         txtId = new JTextField();
         styleTextField(txtId);
         txtId.setEditable(false);
         txtId.setFocusable(false);
-        txtId.setBackground(new Color(245, 245, 245)); // Visual disabled
+        txtId.setBackground(new Color(245, 245, 245)); 
         formPanel.add(txtId, gbc);
         
         gbc.gridy++;
         
-        // Input Nama
+        
         formPanel.add(createFormLabel("Nama Lengkap:"), gbc);
         gbc.gridy++;
         txtNama = new JTextField();
@@ -104,7 +110,7 @@ public class DokterView extends JPanel {
         
         gbc.gridy++;
         
-        // Input Spesialisasi
+        
         formPanel.add(createFormLabel("Spesialisasi:"), gbc);
         gbc.gridy++;
         txtSpesialisasi = new JTextField();
@@ -114,7 +120,7 @@ public class DokterView extends JPanel {
         gbc.gridy++;
         gbc.insets = new Insets(20, 8, 8, 8);
         
-        // Tombol Aksi
+        
         JPanel buttonPanel = new JPanel(new GridLayout(2, 2, 10, 10));
         buttonPanel.setBackground(COLOR_CARD);
         
@@ -136,7 +142,7 @@ public class DokterView extends JPanel {
         buttonPanel.add(btnRefresh);
         formPanel.add(buttonPanel, gbc);
         
-        // Spacer agar form ke atas
+        
         gbc.gridy++;
         gbc.weighty = 1.0;
         formPanel.add(Box.createVerticalGlue(), gbc);
@@ -148,14 +154,37 @@ public class DokterView extends JPanel {
         
         formWrapper.add(formScrollPane, BorderLayout.CENTER);
         
-        // --- PANEL KANAN (TABEL) ---
-        JPanel tableWrapper = createRoundedWrapper();
         
-        JLabel tableTitle = new JLabel("Daftar Dokter Terdaftar");
-        tableTitle.setFont(new Font("Poppins", Font.BOLD, 16));
-        tableTitle.setForeground(COLOR_TEXT);
-        tableTitle.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        tableWrapper.add(tableTitle, BorderLayout.NORTH);
+        JPanel tableWrapper = createRoundedWrapper();
+
+        JPanel tableNorthPanel = new JPanel();
+        tableNorthPanel.setLayout(new BoxLayout(tableNorthPanel, BoxLayout.Y_AXIS));
+        tableNorthPanel.setOpaque(false);
+
+        
+        
+        
+        
+        
+
+        
+        JPanel searchRow = new JPanel(new BorderLayout(8, 0));
+        searchRow.setOpaque(false);
+        searchRow.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        txtSearch = new JTextField();
+        txtSearch.setFont(new Font("Poppins", Font.PLAIN, 13));
+        txtSearch.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(COLOR_BORDER, 1),
+            BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+        txtSearch.setToolTipText("Cari nama dokter atau spesialisasi...");
+        searchRow.add(txtSearch, BorderLayout.CENTER);
+        btnSearch = new JButton("Cari");
+        styleRoundedButton(btnSearch, COLOR_PRIMARY, COLOR_PRIMARY_HOVER);
+        searchRow.add(btnSearch, BorderLayout.EAST);
+        tableNorthPanel.add(searchRow);
+
+        tableWrapper.add(tableNorthPanel, BorderLayout.NORTH);
         
         String[] columns = {"ID Dokter", "Nama", "Spesialisasi"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -168,7 +197,7 @@ public class DokterView extends JPanel {
         table = new JTable(tableModel);
         styleTable(table);
         
-        // Listener mandiri agar Hapus & Ubah otomatis menyala saat baris diklik
+        
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -180,7 +209,7 @@ public class DokterView extends JPanel {
             }
         });
 
-        // Sembunyikan kolom ID secara visual
+        
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
@@ -194,12 +223,12 @@ public class DokterView extends JPanel {
         splitPane.setRightComponent(tableWrapper);
         add(splitPane, BorderLayout.CENTER);
         
-        // Inisialisasi State Awal
+        
         btnUbah.setEnabled(false);
         btnHapus.setEnabled(false);
     }
     
-    // --- HELPER METODE UI MODERN ---
+    
     
     private JPanel createRoundedWrapper() {
         JPanel wrapper = new JPanel(new BorderLayout(10, 10)) {
@@ -324,7 +353,7 @@ public class DokterView extends JPanel {
         table.setDefaultRenderer(Object.class, renderer);
     }
     
-    // --- GETTER ASLI UNTUK DOKTER CONTROLLER ---
+    
     
     public JTable getTable() { return table; }
     public JTextField getTxtId() { return txtId; }
@@ -335,4 +364,22 @@ public class DokterView extends JPanel {
     public JButton getBtnUbah() { return btnUbah; }
     public JButton getBtnHapus() { return btnHapus; }
     public JButton getBtnRefresh() { return btnRefresh; }
+    
+    public void setReadOnlyMode() {
+        formWrapper.setVisible(false);
+        splitPane.setDividerLocation(0);
+        splitPane.setDividerSize(0);
+        pageTitleLabel.setText("Daftar Dokter");
+    }
+
+    public JTextField getTxtSearch() { return txtSearch; }
+    public void addSearchListener(java.awt.event.ActionListener l) {
+        btnSearch.addActionListener(l);
+        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                if (e.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) l.actionPerformed(null);
+            }
+        });
+    }
 }

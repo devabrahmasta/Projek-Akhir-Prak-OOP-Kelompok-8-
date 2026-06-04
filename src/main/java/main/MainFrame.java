@@ -1,45 +1,41 @@
 package main;
 
-import controller.AntrianController;
-import controller.DashboardController;
-import controller.KunjunganController;
-import controller.PasienController;
-import view.AntrianView;
-import view.DashboardView;
-import view.KunjunganView;
-import view.PasienView;
+import controller.*;
+import view.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class MainFrame extends JFrame {
+    private SidebarMenuView sidebar;
     private JPanel contentPanel;
     private CardLayout cardLayout;
     
-    private JButton btnDashboard;
-    private JButton btnPasien;
-    private JButton btnKunjungan;
-    private JButton btnAntrian;
     
     private DashboardView dashboardView;
     private PasienView pasienView;
+    private DokterView dokterView;
     private KunjunganView kunjunganView;
     private AntrianView antrianView;
+    private ObatView obatView;
+    private ResepMasukView resepMasukView;
+    private TagihanView tagihanView;
+
     
     private DashboardController dashboardController;
     private PasienController pasienController;
+    private DokterController dokterController;
     private KunjunganController kunjunganController;
     private AntrianController antrianController;
+    private ObatController obatController;
+    private ResepMasukController resepMasukController;
+    private TagihanController tagihanController;
+
+    private StokMonitorThread stokMonitorThread;
     
-    // --- COLOR PALETTE MODERN ---
-    private final Color COLOR_PRIMARY = new Color(55, 194, 174); // #37c2ae
-    private final Color COLOR_PRIMARY_HOVER = new Color(45, 175, 155); // #2daf9b
-    private final Color COLOR_SURFACE = new Color(240, 246, 246); // #f0f6f6
-    private final Color COLOR_TEXT_DARK = new Color(51, 51, 51); // #333333
+    private final Color COLOR_SURFACE = new Color(240, 246, 246); 
     
     public MainFrame() {
         setTitle("Sistem Manajemen Klinik - Medika Center");
@@ -50,14 +46,24 @@ public class MainFrame extends JFrame {
         initComponents();
         initMVC();
         
-        // Mulai dari halaman Dashboard
-        switchPanel("DASHBOARD");
+        
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
+        if (role.equals("apoteker")) {
+            switchPanel("OBAT");
+        } else if (role.equals("dokter")) {
+            switchPanel("ANTRIAN");
+        } else {
+            switchPanel("DASHBOARD");
+        }
         
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 if (antrianController != null) {
                     antrianController.stopRefreshThread();
+                }
+                if (stokMonitorThread != null) {
+                    stokMonitorThread.stopMonitor();
                 }
             }
         });
@@ -66,174 +72,196 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setLayout(new BorderLayout());
         
-        // --- SIDEBAR MODERN ---
-        JPanel sidebar = new JPanel();
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(250, 0));
-        sidebar.setBackground(COLOR_PRIMARY);
-        sidebar.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
         
-        // Logo & Brand (UPDATE SESUAI INSTRUKSI)
-        JPanel brandPanel = new JPanel();
-        brandPanel.setLayout(new BoxLayout(brandPanel, BoxLayout.X_AXIS));
-        brandPanel.setOpaque(false);
-        brandPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        JLabel lblLogoImage = new JLabel();
-        try {
-            ImageIcon iconAsli = new ImageIcon(getClass().getResource("/assets/logo.png"));
-            Image gambar = iconAsli.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
-            lblLogoImage.setIcon(new ImageIcon(gambar));
-        } catch (Exception e) {
-            System.err.println("Gagal memuat logo: " + e.getMessage());
-        }
-        
-        JLabel lblLogoText = new JLabel("Medika Center");
-        lblLogoText.setFont(new Font("Poppins", Font.BOLD, 20));
-        lblLogoText.setForeground(Color.WHITE);
-        
-        brandPanel.add(lblLogoImage);
-        brandPanel.add(Box.createRigidArea(new Dimension(15, 0))); // Jarak antara logo dan teks
-        brandPanel.add(lblLogoText);
-        
-        sidebar.add(brandPanel);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 40)));
-        
-        // Menu Buttons
-        btnDashboard = createSidebarButton("Dashboard", "DASHBOARD");
-        btnPasien = createSidebarButton("Data Pasien", "PASIEN");
-        btnKunjungan = createSidebarButton("Kunjungan", "KUNJUNGAN");
-        btnAntrian = createSidebarButton("Antrian", "ANTRIAN");
-        
-        sidebar.add(btnDashboard);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnPasien);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnKunjungan);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnAntrian);
-        
-        sidebar.add(Box.createVerticalGlue());
-        
-        // Version Info
-        JLabel versionLabel = new JLabel("v1.0.0 - Module");
-        versionLabel.setFont(new Font("Poppins", Font.ITALIC, 11));
-        versionLabel.setForeground(new Color(255, 255, 255, 150)); // Putih transparan
-        versionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sidebar.add(versionLabel);
+        sidebar = new SidebarMenuView();
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
+        String name = SessionManager.isLoggedIn() ? SessionManager.getUser().getNama() : "User";
+        sidebar.setupMenuForRole(role, name);
         
         add(sidebar, BorderLayout.WEST);
         
-        // --- CONTENT AREA (CARD LAYOUT) ---
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
         contentPanel.setBackground(COLOR_SURFACE);
         add(contentPanel, BorderLayout.CENTER);
-    }
-    
-    private JButton createSidebarButton(String text, String cardName) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("Poppins", Font.BOLD, 14));
-        btn.setHorizontalAlignment(SwingConstants.LEFT);
-        btn.setAlignmentX(Component.LEFT_ALIGNMENT);
-        btn.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
         
-        // Matikan default styling Swing
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
         
-        // Custom Rounded UI
-        btn.setUI(new javax.swing.plaf.basic.BasicButtonUI() {
-            @Override
-            public void paint(Graphics g, JComponent c) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(c.getBackground());
-                g2.fillRoundRect(0, 0, c.getWidth(), c.getHeight(), 15, 15);
-                super.paint(g2, c);
-                g2.dispose();
-            }
-        });
+        if (sidebar.getBtnDashboard() != null) sidebar.getBtnDashboard().addActionListener(e -> switchPanel("DASHBOARD"));
+        if (sidebar.getBtnPasien() != null) sidebar.getBtnPasien().addActionListener(e -> switchPanel("PASIEN"));
+        if (sidebar.getBtnDokter() != null) sidebar.getBtnDokter().addActionListener(e -> switchPanel("DOKTER"));
+        if (sidebar.getBtnKunjungan() != null) sidebar.getBtnKunjungan().addActionListener(e -> switchPanel("KUNJUNGAN"));
+        if (sidebar.getBtnAntrian() != null) sidebar.getBtnAntrian().addActionListener(e -> switchPanel("ANTRIAN"));
+        if (sidebar.getBtnObat() != null) sidebar.getBtnObat().addActionListener(e -> switchPanel("OBAT"));
+        if (sidebar.getBtnResepMasuk() != null) sidebar.getBtnResepMasuk().addActionListener(e -> switchPanel("RESEP_MASUK"));
+        if (sidebar.getBtnTagihan() != null) sidebar.getBtnTagihan().addActionListener(e -> switchPanel("TAGIHAN"));
         
-        btn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                switchPanel(cardName);
-            }
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (btn.getBackground().equals(COLOR_PRIMARY)) {
-                    btn.setBackground(COLOR_PRIMARY_HOVER);
+        if (sidebar.getBtnLogout() != null) {
+            sidebar.getBtnLogout().addActionListener(e -> {
+                if (antrianController != null) {
+                    antrianController.stopRefreshThread();
                 }
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (btn.getBackground().equals(COLOR_PRIMARY_HOVER)) {
-                    btn.setBackground(COLOR_PRIMARY);
+                if (stokMonitorThread != null) {
+                    stokMonitorThread.stopMonitor();
                 }
-            }
-        });
-        
-        return btn;
+                SessionManager.logout();
+                this.dispose();
+                SwingUtilities.invokeLater(() -> {
+                    LoginView loginView = new LoginView();
+                    new LoginController(loginView);
+                    loginView.setVisible(true);
+                });
+            });
+        }
     }
     
     private void initMVC() {
-        // Inisialisasi View
-        dashboardView = new DashboardView();
-        pasienView = new PasienView();
-        kunjunganView = new KunjunganView();
-        antrianView = new AntrianView();
+        String role = SessionManager.isLoggedIn() ? SessionManager.getUser().getRole().toLowerCase().trim() : "";
         
-        // Daftarkan View ke CardLayout
-        contentPanel.add(dashboardView, "DASHBOARD");
-        contentPanel.add(pasienView, "PASIEN");
-        contentPanel.add(kunjunganView, "KUNJUNGAN");
-        contentPanel.add(antrianView, "ANTRIAN");
+        if (role.equals("admin")) {
+            
+            dashboardView = new DashboardView();
+            contentPanel.add(dashboardView, "DASHBOARD");
+            dashboardController = new DashboardController(dashboardView);
+            
+            pasienView = new PasienView();
+            contentPanel.add(pasienView, "PASIEN");
+            pasienController = new PasienController(pasienView);
+            
+            dokterView = new DokterView();
+            contentPanel.add(dokterView, "DOKTER");
+            dokterController = new DokterController(dokterView);
+            
+            kunjunganView = new KunjunganView();
+            contentPanel.add(kunjunganView, "KUNJUNGAN");
+            kunjunganController = new KunjunganController(kunjunganView);
+            
+            antrianView = new AntrianView();
+            contentPanel.add(antrianView, "ANTRIAN");
+            antrianController = new AntrianController(antrianView);
+            
+            tagihanView = new TagihanView();
+            contentPanel.add(tagihanView, "TAGIHAN");
+            tagihanController = new TagihanController(tagihanView);
+
+            obatView = new ObatView();
+            contentPanel.add(obatView, "OBAT");
+            obatController = new ObatController(obatView);
+            
+            resepMasukView = new ResepMasukView();
+            contentPanel.add(resepMasukView, "RESEP_MASUK");
+            resepMasukController = new ResepMasukController(resepMasukView);
+
+            stokMonitorThread = new StokMonitorThread(obatController);
+            stokMonitorThread.start();
+
+        } else if (role.equals("resepsionis")) {
+            
+            dashboardView = new DashboardView();
+            contentPanel.add(dashboardView, "DASHBOARD");
+            dashboardController = new DashboardController(dashboardView);
+            
+            pasienView = new PasienView();
+            contentPanel.add(pasienView, "PASIEN");
+            pasienController = new PasienController(pasienView);
+            
+            dokterView = new DokterView();
+            contentPanel.add(dokterView, "DOKTER");
+            dokterController = new DokterController(dokterView);
+            
+            kunjunganView = new KunjunganView();
+            contentPanel.add(kunjunganView, "KUNJUNGAN");
+            kunjunganController = new KunjunganController(kunjunganView);
+            
+            antrianView = new AntrianView();
+            contentPanel.add(antrianView, "ANTRIAN");
+            antrianController = new AntrianController(antrianView);
+            
+            tagihanView = new TagihanView();
+            contentPanel.add(tagihanView, "TAGIHAN");
+            tagihanController = new TagihanController(tagihanView);
+            
+        } else if (role.equals("dokter")) {
+            
+            antrianView = new AntrianView();
+            contentPanel.add(antrianView, "ANTRIAN");
+            antrianController = new AntrianController(antrianView);
+
+            kunjunganView = new KunjunganView();
+            contentPanel.add(kunjunganView, "KUNJUNGAN");
+            kunjunganController = new KunjunganController(kunjunganView);
+
+        } else if (role.equals("apoteker")) {
+            
+            obatView = new ObatView();
+            contentPanel.add(obatView, "OBAT");
+            obatController = new ObatController(obatView);
+
+            resepMasukView = new ResepMasukView();
+            contentPanel.add(resepMasukView, "RESEP_MASUK");
+            resepMasukController = new ResepMasukController(resepMasukView);
+
+            stokMonitorThread = new StokMonitorThread(obatController);
+            stokMonitorThread.start();
+        }
+
         
-        // Inisialisasi Controller
-        dashboardController = new DashboardController(dashboardView);
-        pasienController = new PasienController(pasienView);
-        kunjunganController = new KunjunganController(kunjunganView);
-        antrianController = new AntrianController(antrianView);
+        if (antrianController != null && kunjunganController != null) {
+            final KunjunganController kc = kunjunganController;
+            antrianController.setOnPanggilListener(info -> {
+                kc.autoFillFromAntrian(
+                    info.idPasien, info.nama, info.noRM,
+                    info.namaDokter, info.idDokter
+                );
+                switchPanel("KUNJUNGAN");
+            });
+
+            kunjunganController.setOnSelesaiListener(() -> {
+                if (antrianController != null) {
+                    antrianController.loadData(true);
+                }
+            });
+        }
     }
     
     private void switchPanel(String cardName) {
-        cardLayout.show(contentPanel, cardName);
+        if (cardLayout == null || contentPanel == null) return;
         
-        // Reset warna semua tombol ke default
-        JButton[] buttons = {btnDashboard, btnPasien, btnKunjungan, btnAntrian};
-        for (JButton btn : buttons) {
-            btn.setBackground(COLOR_PRIMARY);
-            btn.setForeground(Color.WHITE);
+        
+        boolean exists = false;
+        if ("DASHBOARD".equals(cardName) && dashboardView != null) exists = true;
+        else if ("PASIEN".equals(cardName) && pasienView != null) exists = true;
+        else if ("DOKTER".equals(cardName) && dokterView != null) exists = true;
+        else if ("KUNJUNGAN".equals(cardName) && kunjunganView != null) exists = true;
+        else if ("ANTRIAN".equals(cardName) && antrianView != null) exists = true;
+        else if ("OBAT".equals(cardName) && obatView != null) exists = true;
+        else if ("RESEP_MASUK".equals(cardName) && resepMasukView != null) exists = true;
+        else if ("TAGIHAN".equals(cardName) && tagihanView != null) exists = true;
+        
+        if (!exists) return; 
+        
+        cardLayout.show(contentPanel, cardName);
+        if (sidebar != null) {
+            sidebar.setMenuAktif(cardName);
         }
         
-        // Beri warna khusus pada tombol yang aktif (Background Putih, Teks Tosca)
+        
         if ("DASHBOARD".equals(cardName)) {
-            styleActiveButton(btnDashboard);
             if (dashboardController != null) dashboardController.loadData();
         } else if ("PASIEN".equals(cardName)) {
-            styleActiveButton(btnPasien);
             if (pasienController != null) pasienController.loadData();
         } else if ("KUNJUNGAN".equals(cardName)) {
-            styleActiveButton(btnKunjungan);
             if (kunjunganController != null) {
-                kunjunganController.loadDropdowns(); 
                 kunjunganController.loadData();
             }
         } else if ("ANTRIAN".equals(cardName)) {
-            styleActiveButton(btnAntrian);
             if (antrianController != null) {
-                antrianController.loadDropdowns(); 
+                antrianController.loadDropdowns();
                 antrianController.loadData(true);
             }
+        } else if ("OBAT".equals(cardName)) {
+            if (obatController != null) obatController.loadData();
+        } else if ("RESEP_MASUK".equals(cardName)) {
+            if (resepMasukController != null) resepMasukController.loadDaftarResep();
         }
-    }
-    
-    private void styleActiveButton(JButton btn) {
-        btn.setBackground(Color.WHITE);
-        btn.setForeground(COLOR_PRIMARY);
     }
 }

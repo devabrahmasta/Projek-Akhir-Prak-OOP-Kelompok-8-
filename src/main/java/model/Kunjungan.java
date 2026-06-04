@@ -10,6 +10,9 @@ public class Kunjungan implements Reportable {
     private Timestamp tanggalKunjungan;
     private String keluhan;
     private String diagnosa;
+    
+    private Pasien pasien;
+    private Dokter dokter;
 
     public Kunjungan() {
     }
@@ -81,6 +84,22 @@ public class Kunjungan implements Reportable {
         System.out.println("Keluhan          : " + keluhan);
         System.out.println("Diagnosa         : " + diagnosa);
         System.out.println("===============================");
+    }
+
+    public Pasien getPasien() {
+        return pasien;
+    }
+
+    public void setPasien(Pasien pasien) {
+        this.pasien = pasien;
+    }
+
+    public Dokter getDokter() {
+        return dokter;
+    }
+
+    public void setDokter(Dokter dokter) {
+        this.dokter = dokter;
     }
 
     @Override

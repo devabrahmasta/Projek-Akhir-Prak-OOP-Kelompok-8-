@@ -9,6 +9,9 @@ public class Antrian {
     private Date tanggal;
     private int nomorAntrian;
     private String status;
+    
+    private Pasien pasien;
+    private Dokter dokter;
 
     public Antrian() {
     }
@@ -68,5 +71,21 @@ public class Antrian {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Pasien getPasien() {
+        return pasien;
+    }
+
+    public void setPasien(Pasien pasien) {
+        this.pasien = pasien;
+    }
+
+    public Dokter getDokter() {
+        return dokter;
+    }
+
+    public void setDokter(Dokter dokter) {
+        this.dokter = dokter;
     }
 }

@@ -16,26 +16,32 @@ public class StokMonitorThread extends Thread {
 
     @Override
     public void run() {
+        setDaemon(true);
         while (running) {
             try {
-                
                 Thread.sleep(30000);
-                
+
                 List<Obat> semuaObat = obatController.getSemuaObat();
+                StringBuilder pesanKritis = new StringBuilder();
+                int jumlahKritis = 0;
+
                 for (Obat obat : semuaObat) {
                     if (obat.getStok() < CRITICAL_STOCK_THRESHOLD) {
-                        
-                        SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(null, 
-                                "Peringatan! Stok obat " + obat.getNama() + " kritis (" + obat.getStok() + " tersisa).", 
-                                "Stok Kritis", 
-                                JOptionPane.WARNING_MESSAGE);
-                        });
-                        
-                        
-                        running = false;
-                        break; 
+                        jumlahKritis++;
+                        pesanKritis.append("• ").append(obat.getNama())
+                                   .append(" (stok: ").append(obat.getStok()).append(")\n");
                     }
+                }
+
+                if (jumlahKritis > 0) {
+                    final String pesan = pesanKritis.toString();
+                    final int jumlah = jumlahKritis;
+                    SwingUtilities.invokeLater(() ->
+                        JOptionPane.showMessageDialog(null,
+                            jumlah + " obat stok kritis:\n" + pesan,
+                            "Peringatan Stok Obat",
+                            JOptionPane.WARNING_MESSAGE)
+                    );
                 }
             } catch (InterruptedException e) {
                 running = false;

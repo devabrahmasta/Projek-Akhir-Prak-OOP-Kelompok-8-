@@ -1,5 +1,5 @@
 package model.interfaces;
 
 public interface Notifiable {
-    void kirimNotifikasi(String pesan);
+    String kirimNotifikasi(String pesan);
 }
